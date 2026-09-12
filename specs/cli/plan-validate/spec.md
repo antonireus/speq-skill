@@ -1,6 +1,6 @@
 # Feature: Plan Validation
 
-Validates plan structure and spec delta formatting before implementation begins. Catches formatting errors early to prevent malformed specs from being recorded.
+Validates plan structure, spec delta formatting, and spec delta anchors before implementation begins. Catches errors early to prevent malformed specs from being recorded.
 
 ## Background
 
@@ -9,6 +9,14 @@ Validates plan structure and spec delta formatting before implementation begins.
 * A plan MAY contain a `decision-log.md` file in the plan-level (lightweight) format
 * A plan MAY contain spec deltas in `<domain>/<feature>/spec.md` files
 * Spec deltas use DELTA markers: `<!-- DELTA:NEW -->`, `<!-- DELTA:CHANGED -->`, `<!-- DELTA:REMOVED -->`
+* The anchor of a delta block is its first non-empty line
+* Recognized anchors: `### Scenario: <name>`, `## Background`, and `# Feature: <name>`
+* `DELTA:NEW` and `DELTA:REMOVED` MAY target a `### Scenario: <name>` anchor only
+* Anchor checks apply the target-independent rules of `speq record`: recognized anchors, legal marker and anchor pairs, and repeated anchors
+* Whether an anchor exists in the target spec is checked by `speq record` only
+* Anchor checks are skipped when the target spec `specs/<domain>/<feature>/spec.md` does not exist
+* Anchor checks are skipped for a delta file that fails delta parsing
+* A delta file skipped for a parsing failure SHALL produce a warning naming the file
 * Plan-level decision logs use H1 `# Decision Log: <plan-name>` and at least one of `## Interview`, `## Design Decisions`, `## Review Findings`
 * Steps MUST be formatted as `* *KEYWORD* <text>` (bullet, emphasized uppercase keyword)
 * Step keywords (GIVEN, WHEN, THEN, AND) MUST be uppercase
@@ -132,3 +140,37 @@ Validates plan structure and spec delta formatting before implementation begins.
 * *WHEN* the user runs `speq plan validate decisions-bad-h1`
 * *THEN* the system SHALL report an error that the decision log H1 MUST match `# Decision Log: <plan-name>`
 * *AND* the system SHALL exit with non-zero code
+
+### Scenario: Validate plan with CHANGED Background or description delta passes
+
+* *GIVEN* a plan named "prose-changed" whose delta targets an existing feature
+* *AND* the delta wraps `## Background` and `# Feature: <name>` in `<!-- DELTA:CHANGED -->` blocks
+* *WHEN* the user runs `speq plan validate prose-changed`
+* *THEN* the system SHALL report validation passed
+* *AND* the system SHALL exit with code 0
+
+### Scenario: Validate plan with DELTA:NEW or DELTA:REMOVED targeting Background or description reports errors
+
+* *GIVEN* a plan named "prose-bad-kind" whose delta targets an existing feature
+* *AND* the delta wraps `## Background` in a `<!-- DELTA:NEW -->` block and `# Feature: <name>` in a `<!-- DELTA:REMOVED -->` block
+* *WHEN* the user runs `speq plan validate prose-bad-kind`
+* *THEN* the system SHALL report one error per rejected block
+* *AND* each error SHALL name the delta spec file, the marker, and the anchor
+* *AND* the system SHALL exit with non-zero code
+
+### Scenario: Validate plan with unrecognized delta anchor reports an error
+
+* *GIVEN* a plan named "prose-no-anchor" whose delta targets an existing feature
+* *AND* a delta block starts with a bullet list instead of a recognized anchor
+* *WHEN* the user runs `speq plan validate prose-no-anchor`
+* *THEN* the system SHALL report an error listing the three recognized anchors
+* *AND* the system SHALL exit with non-zero code
+
+### Scenario: Validate plan skips anchor checks for a new feature
+
+* *GIVEN* a plan named "prose-new-feature" whose delta has no target spec under `specs/`
+* *AND* the delta wraps `## Background` in a `<!-- DELTA:NEW -->` block
+* *WHEN* the user runs `speq plan validate prose-new-feature`
+* *THEN* the system SHALL report validation passed
+* *AND* the system MUST NOT report any anchor error
+* *AND* the system SHALL exit with code 0

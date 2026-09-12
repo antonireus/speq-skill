@@ -37,6 +37,8 @@ specs/<domain>/<feature>/spec.md exists?
 Output: specs/_plans/<plan-name>/<domain>/<feature>/spec.md
 ```
 
+**Prose drift check**: after drafting a scenario delta for an existing feature, re-read that feature's `## Background` and `# Feature: <name>` description (`speq feature get <domain>/<feature>`). When the scenario change makes either inaccurate, author a `DELTA:CHANGED` block for that section too, per `/speq-plan`'s `references/delta-template.md`.
+
 ### 3. Test Mapping and Verification
 
 Every scenario requires two forms of external proof. No claims, only evidence.

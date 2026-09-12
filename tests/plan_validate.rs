@@ -30,6 +30,19 @@ fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
     Ok(())
 }
 
+/// Copy the target specs a fixture's deltas merge against into `specs/`.
+///
+/// A no-op when the fixture carries no `_targets/<fixture_name>/` directory,
+/// so every existing fixture without a target spec keeps passing unmodified.
+fn setup_target_specs(tmp: &TempDir, fixture_name: &str) {
+    let targets_path = Path::new("tests/fixtures/plan_validate/_targets").join(fixture_name);
+    if !targets_path.exists() {
+        return;
+    }
+    let dest_path = tmp.path().join("specs");
+    copy_dir_recursive(&targets_path, &dest_path).unwrap();
+}
+
 mod plan_exists {
     use super::*;
 
@@ -312,5 +325,82 @@ mod decision_log {
             .assert()
             .code(1)
             .stdout(predicate::str::contains("wrong-name"));
+    }
+}
+
+mod delta_anchors {
+    use super::*;
+
+    #[test]
+    fn passes_with_changed_prose_anchors() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "prose-changed");
+        setup_target_specs(&tmp, "prose-changed");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "prose-changed"])
+            .assert()
+            .success();
+    }
+
+    #[test]
+    fn fails_with_new_or_removed_on_prose_anchor() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "prose-bad-kind");
+        setup_target_specs(&tmp, "prose-bad-kind");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "prose-bad-kind"])
+            .assert()
+            .code(1)
+            .stdout(predicate::str::contains("DELTA:NEW"))
+            .stdout(predicate::str::contains("DELTA:REMOVED"))
+            .stdout(predicate::str::contains("## Background"))
+            .stdout(predicate::str::contains("# Feature: <name>"));
+    }
+
+    #[test]
+    fn fails_with_unrecognized_anchor() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "prose-no-anchor");
+        setup_target_specs(&tmp, "prose-no-anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "prose-no-anchor"])
+            .assert()
+            .code(1)
+            .stdout(predicate::str::contains("### Scenario:"))
+            .stdout(predicate::str::contains("## Background"))
+            .stdout(predicate::str::contains("# Feature:"));
+    }
+
+    #[test]
+    fn fails_with_nested_delta_markers() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "nested-markers");
+        setup_target_specs(&tmp, "nested-markers");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "nested-markers"])
+            .assert()
+            .code(1)
+            .stdout(predicate::str::contains("Malformed delta marker"));
+    }
+
+    #[test]
+    fn skips_anchor_checks_for_new_feature() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "prose-new-feature");
+        setup_target_specs(&tmp, "prose-new-feature");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "prose-new-feature"])
+            .assert()
+            .success();
     }
 }

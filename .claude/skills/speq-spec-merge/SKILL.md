@@ -24,11 +24,23 @@ specs/<domain>/<feature>/spec.md exists?
 └─ Yes → Merge using markers below
 ```
 
+A delta block's anchor is the first non-empty line inside the block. `### Scenario: <name>` and `## Background` match exactly; `# Feature: <name>` matches by the prefix `# Feature`, so a description delta MAY rename the feature.
+
+**Scenario-anchor markers** (`### Scenario: <name>` wrapped in the marker):
+
 | Marker | Action |
 |--------|--------|
 | `DELTA:NEW` | Append scenario |
 | `DELTA:CHANGED` | Replace scenario with same name |
 | `DELTA:REMOVED` | Delete scenario with same name |
+
+**Prose-anchor markers** (`## Background` or `# Feature: <name>` wrapped in the marker):
+
+| Marker | Action |
+|--------|--------|
+| `DELTA:CHANGED` | Replace the whole section (heading plus body) in place. Any line the block omits is deleted from the permanent spec |
+| `DELTA:NEW` | Rejected — Background and the description are required sections that always exist |
+| `DELTA:REMOVED` | Rejected — removing a required section produces an invalid spec |
 
 After each merge:
 1. Strip all `<!-- DELTA:* -->` markers
@@ -89,3 +101,6 @@ If a threshold is exceeded, return BEFORE archiving and ask the orchestrator to 
 | Assuming split/domain reorganization | User must decide |
 | Rewriting scenario wording during merge | Recording is a mechanical operation |
 | Leaving DELTA markers | Pollutes permanent specs |
+| `DELTA:CHANGED` or `DELTA:REMOVED` naming a scenario absent from the target spec | Rejected — `record` errors instead of silently merging nothing |
+| Heading left outside the marker, so the block's first line is not a recognized anchor | Rejected — `record` cannot tell what the block targets |
+| Two delta blocks of one file sharing an anchor, whatever their marker kinds | Rejected — the merged result would depend on block order; write one block carrying the final text |

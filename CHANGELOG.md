@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.20.0
+
+- `DELTA:CHANGED` can now target a feature's `## Background` section or its `# Feature: <name>` description, not just `### Scenario:` blocks — `speq plan validate` and `speq record` both reject a `DELTA:NEW`/`DELTA:REMOVED` on either anchor, an unrecognized anchor, or two blocks colliding on the same anchor, closing the silent-no-op and file-corrupting failure modes those blocks used to hit
+- `speq record` writes a `notes/prose-realignment.md` audit note into the archived plan whenever a Background or Feature-description merge actually changes text
+- Recorded `cli/record` and `cli/plan-validate` spec updates; 11 design decisions promoted to `specs/_decision/005-add-prose-delta-anchors.md`
+
 ## 0.19.0
 
 - Polish `docs/` prose (shorter sentences, active voice, no normative content lost)

@@ -1,7 +1,7 @@
 use std::path::Path;
 use thiserror::Error;
 
-use crate::record::find_delta_specs;
+use crate::record::{check_anchor_rules, find_delta_specs, parse_deltas};
 use crate::validate;
 use crate::validate::report::{ValidationError, ValidationWarning};
 
@@ -135,23 +135,22 @@ pub fn validate_plan(
         })?;
 
     for spec_path in &delta_specs {
-        let relative_path = spec_path
-            .strip_prefix(&plan_dir)
-            .unwrap_or(spec_path)
-            .display()
-            .to_string();
+        let relative = spec_path.strip_prefix(&plan_dir).unwrap_or(spec_path);
+        let relative_path = relative.display().to_string();
+        let target_spec = base
+            .join(relative.parent().unwrap_or(Path::new("")))
+            .join("spec.md");
 
         result.spec_paths.push(relative_path.clone());
 
-        // Validate delta markers
         let content =
             std::fs::read_to_string(spec_path).map_err(|_| PlanValidationError::FileReadError {
                 path: spec_path.display().to_string(),
             })?;
 
         validate_delta_markers(&content, &relative_path, &mut result);
+        validate_delta_anchors(&content, &relative_path, &target_spec, &mut result);
 
-        // Apply standard spec validation
         if let Ok(validation_result) = validate::run(spec_path) {
             result.distribute_spec_validation_result(relative_path, validation_result);
         }
@@ -212,6 +211,42 @@ fn validate_delta_markers(content: &str, file_path: &str, result: &mut PlanValid
                 line_number: line_num,
             });
         }
+    }
+}
+
+/// Reject every delta block that names no section to merge into, or names one its
+/// marker may not target.
+///
+/// Well-formedness belongs to `record::parse_deltas` and the legality matrix to
+/// `record::check_anchor_rules`, so this gate and `speq record` cannot drift apart:
+/// a delta file this gate passes is one `speq record` can parse and apply. Both
+/// rule sets hold against the delta file alone, which is what lets both gates
+/// share them.
+///
+/// Whether an anchor exists in the target spec is settled at record time, because
+/// another plan may rewrite that spec before this one records. A delta whose target
+/// spec does not exist yet records as a whole new file, so its blocks anchor to
+/// nothing and only well-formedness is judged for it.
+fn validate_delta_anchors(
+    content: &str,
+    file_path: &str,
+    target_spec: &Path,
+    result: &mut PlanValidationResult,
+) {
+    let blocks = match parse_deltas(content) {
+        Ok(blocks) => blocks,
+        Err(error) => {
+            result.add_error(format!("{file_path}: {error}"));
+            return;
+        }
+    };
+
+    if !target_spec.exists() {
+        return;
+    }
+
+    for message in check_anchor_rules(&blocks) {
+        result.add_error(format!("{file_path}: {message}"));
     }
 }
 
@@ -442,5 +477,163 @@ Description.
         // Should still pass (warnings don't fail validation)
         assert!(result.is_success());
         assert!(!result.spec_validation_warnings.is_empty());
+    }
+
+    const TARGET_SPEC: &str = r#"# Feature: Test
+
+Description.
+
+## Background
+
+* Context.
+
+## Scenarios
+
+### Scenario: Existing one
+
+* *GIVEN* setup
+* *WHEN* action
+* *THEN* result SHALL happen
+"#;
+
+    const CHANGED_PROSE_DELTA: &str = r#"<!-- DELTA:CHANGED -->
+# Feature: Test
+
+Rewritten description.
+<!-- /DELTA:CHANGED -->
+
+<!-- DELTA:CHANGED -->
+## Background
+
+* Rewritten context.
+<!-- /DELTA:CHANGED -->
+
+## Scenarios
+
+### Scenario: Existing one
+
+* *GIVEN* setup
+* *WHEN* action
+* *THEN* result SHALL happen
+"#;
+
+    const NEW_ON_BACKGROUND_DELTA: &str = r#"# Feature: Test
+
+Description.
+
+<!-- DELTA:NEW -->
+## Background
+
+* Rewritten context.
+<!-- /DELTA:NEW -->
+
+## Scenarios
+
+### Scenario: Existing one
+
+* *GIVEN* setup
+* *WHEN* action
+* *THEN* result SHALL happen
+"#;
+
+    // Markers balance per type, so validate_delta_markers accepts this file while
+    // parse_deltas rejects the nested open marker.
+    const NESTED_MARKER_DELTA: &str = r#"# Feature: Test
+
+Description.
+
+## Background
+
+* Context.
+
+## Scenarios
+
+<!-- DELTA:NEW -->
+### Scenario: Outer
+
+* *GIVEN* setup
+* *WHEN* action
+* *THEN* result SHALL happen
+
+<!-- DELTA:CHANGED -->
+### Scenario: Inner
+
+* *GIVEN* setup
+* *WHEN* action
+* *THEN* result SHALL happen
+<!-- /DELTA:CHANGED -->
+<!-- /DELTA:NEW -->
+"#;
+
+    fn write_delta_spec(plan_dir: &std::path::Path, content: &str) {
+        let spec_dir = plan_dir.join("test/feature");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::write(spec_dir.join("spec.md"), content).unwrap();
+    }
+
+    fn write_target_spec(tmp: &TempDir) {
+        let spec_dir = tmp.path().join("specs/test/feature");
+        fs::create_dir_all(&spec_dir).unwrap();
+        fs::write(spec_dir.join("spec.md"), TARGET_SPEC).unwrap();
+    }
+
+    #[test]
+    fn passes_when_changed_targets_background_and_description() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = create_plan(&tmp, "prose-changed");
+        write_delta_spec(&plan_dir, CHANGED_PROSE_DELTA);
+        write_target_spec(&tmp);
+
+        let result = validate_plan(&tmp.path().join("specs"), "prose-changed").unwrap();
+
+        assert!(result.is_success());
+        assert!(result.errors.is_empty(), "{:?}", result.errors);
+    }
+
+    #[test]
+    fn reports_anchor_error_when_new_targets_background() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = create_plan(&tmp, "prose-bad-kind");
+        write_delta_spec(&plan_dir, NEW_ON_BACKGROUND_DELTA);
+        write_target_spec(&tmp);
+
+        let result = validate_plan(&tmp.path().join("specs"), "prose-bad-kind").unwrap();
+
+        assert!(!result.is_success());
+        assert_eq!(result.errors.len(), 1, "{:?}", result.errors);
+        let error = &result.errors[0];
+        assert!(error.contains("test/feature/spec.md"), "{error}");
+        assert!(error.contains("DELTA:NEW"), "{error}");
+        assert!(error.contains("## Background"), "{error}");
+    }
+
+    #[test]
+    fn skips_anchor_checks_when_target_spec_missing() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = create_plan(&tmp, "prose-new-feature");
+        write_delta_spec(&plan_dir, NEW_ON_BACKGROUND_DELTA);
+
+        let result = validate_plan(&tmp.path().join("specs"), "prose-new-feature").unwrap();
+
+        assert!(result.is_success());
+        assert!(result.errors.is_empty(), "{:?}", result.errors);
+    }
+
+    #[test]
+    fn fails_when_delta_parsing_fails() {
+        let tmp = TempDir::new().unwrap();
+        let plan_dir = create_plan(&tmp, "prose-unparsable");
+        write_delta_spec(&plan_dir, NESTED_MARKER_DELTA);
+        write_target_spec(&tmp);
+
+        let result = validate_plan(&tmp.path().join("specs"), "prose-unparsable").unwrap();
+
+        assert!(!result.is_success());
+        assert_eq!(result.errors.len(), 1, "{:?}", result.errors);
+        assert!(
+            result.errors[0].contains("test/feature/spec.md"),
+            "{}",
+            result.errors[0]
+        );
     }
 }

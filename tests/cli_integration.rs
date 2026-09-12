@@ -2,6 +2,7 @@ use assert_cmd::Command;
 use predicates::prelude::*;
 use serial_test::serial;
 use std::fs;
+use std::path::Path;
 use std::sync::OnceLock;
 use tempfile::TempDir;
 
@@ -514,6 +515,31 @@ mod search {
 mod record {
     use super::*;
 
+    fn copy_dir_recursive(src: &Path, dst: &Path) -> std::io::Result<()> {
+        fs::create_dir_all(dst)?;
+        for entry in fs::read_dir(src)? {
+            let entry = entry?;
+            let src_path = entry.path();
+            let dst_path = dst.join(entry.file_name());
+            if src_path.is_dir() {
+                copy_dir_recursive(&src_path, &dst_path)?;
+            } else {
+                fs::copy(&src_path, &dst_path)?;
+            }
+        }
+        Ok(())
+    }
+
+    /// Copy `tests/fixtures/record/<case>/specs` into `<tmp>/specs`.
+    ///
+    /// `speq record` archives the plan it runs against, so every record test
+    /// needs its own writable copy of a fixture rather than a shared one.
+    fn setup_record_fixture(tmp: &TempDir, case: &str) {
+        let fixture_path = Path::new("tests/fixtures/record").join(case).join("specs");
+        let dest_path = tmp.path().join("specs");
+        copy_dir_recursive(&fixture_path, &dest_path).unwrap();
+    }
+
     #[test]
     fn record_nonexistent_plan_fails() {
         let tmp = TempDir::new().unwrap();
@@ -681,5 +707,290 @@ A new feature added via plan.
             .assert()
             .success()
             .stdout(predicate::str::contains("new/feature"));
+    }
+
+    #[test]
+    fn record_merges_changed_background() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "merges_changed_background");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .success();
+
+        let merged = fs::read_to_string(specs.join("domain/feature/spec.md")).unwrap();
+        assert!(
+            merged.contains("* Context two.\n\n## Scenarios"),
+            "{merged}"
+        );
+        assert!(!merged.contains("* Context one."), "{merged}");
+        assert!(merged.contains("### Scenario: Login"), "{merged}");
+    }
+
+    #[test]
+    fn record_merges_changed_description() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "merges_changed_description");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .success();
+
+        let merged = fs::read_to_string(specs.join("domain/feature/spec.md")).unwrap();
+        assert!(merged.starts_with("# Feature: Test Feature\n"), "{merged}");
+        assert!(
+            merged.contains("other things.\n\n## Background"),
+            "{merged}"
+        );
+        assert!(!merged.contains("do things.\n\n## Background"), "{merged}");
+    }
+
+    #[test]
+    fn record_renames_feature_heading() {
+        let tmp = TempDir::new().unwrap();
+        setup_record_fixture(&tmp, "renames_feature_heading");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "p"])
+            .assert()
+            .success();
+
+        let merged = fs::read_to_string(tmp.path().join("specs/domain/feature/spec.md")).unwrap();
+        assert!(merged.starts_with("# Feature: Renamed Name\n"), "{merged}");
+        assert!(!merged.contains("# Feature: Original Name"), "{merged}");
+        assert!(merged.contains("## Background"), "{merged}");
+    }
+
+    #[test]
+    fn record_skips_anchor_checks_for_new_feature() {
+        let tmp = TempDir::new().unwrap();
+        setup_record_fixture(&tmp, "skips_anchor_checks_for_new_feature");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "p"])
+            .assert()
+            .success();
+
+        let written = fs::read_to_string(tmp.path().join("specs/new/feature/spec.md")).unwrap();
+        assert!(!written.contains("DELTA"), "{written}");
+        assert!(written.contains("## Background"), "{written}");
+        assert!(written.contains("# Feature: Fresh"), "{written}");
+    }
+
+    #[test]
+    fn record_rejects_new_on_prose_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_new_on_prose_anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("DELTA:NEW"))
+            .stderr(predicate::str::contains("DELTA:CHANGED"))
+            .stderr(predicate::str::contains("## Background"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+    }
+
+    #[test]
+    fn record_rejects_removed_on_prose_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_removed_on_prose_anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("DELTA:REMOVED"))
+            .stderr(predicate::str::contains("DELTA:CHANGED"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+    }
+
+    #[test]
+    fn record_rejects_unrecognized_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_unrecognized_anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("### Scenario:"))
+            .stderr(predicate::str::contains("## Background"))
+            .stderr(predicate::str::contains("# Feature"))
+            .stderr(predicate::str::contains("inside the delta marker"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+    }
+
+    #[test]
+    fn record_rejects_repeated_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_repeated_anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("### Scenario: Added"))
+            .stderr(predicate::str::contains("appears in 2 delta blocks"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+    }
+
+    #[test]
+    fn record_rejects_mixed_kinds_on_one_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_mixed_kinds_on_one_anchor");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("### Scenario: Added"))
+            .stderr(predicate::str::contains("DELTA:NEW"))
+            .stderr(predicate::str::contains("DELTA:CHANGED"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+    }
+
+    #[test]
+    fn record_rejects_missing_scenario_anchor() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "rejects_missing_scenario_anchor");
+        let before = fs::read_to_string(specs.join("domain/feature/spec.md")).unwrap();
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("### Scenario: Logout"))
+            .stderr(predicate::str::contains("does not hold"));
+
+        assert!(specs.join("_plans/test-plan").exists());
+        let unchanged = fs::read_to_string(specs.join("domain/feature/spec.md")).unwrap();
+        assert_eq!(unchanged, before);
+    }
+
+    #[test]
+    fn record_writes_nothing_when_a_later_delta_fails() {
+        let tmp = TempDir::new().unwrap();
+        setup_record_fixture(&tmp, "writes_nothing_when_later_delta_fails");
+        let specs = tmp.path().join("specs");
+        let one_before = fs::read_to_string(specs.join("a/one/spec.md")).unwrap();
+        let two_before = fs::read_to_string(specs.join("b/two/spec.md")).unwrap();
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "p"])
+            .assert()
+            .code(1)
+            .stderr(predicate::str::contains("b/two/spec.md"))
+            .stderr(predicate::str::contains("does not hold"));
+
+        assert_eq!(
+            fs::read_to_string(specs.join("a/one/spec.md")).unwrap(),
+            one_before
+        );
+        assert_eq!(
+            fs::read_to_string(specs.join("b/two/spec.md")).unwrap(),
+            two_before
+        );
+        assert!(specs.join("_plans/p").exists());
+        assert!(!specs.join("_recorded/001-p").exists());
+    }
+
+    #[test]
+    fn record_writes_prose_realignment_note_for_a_description_change() {
+        let tmp = TempDir::new().unwrap();
+        setup_record_fixture(
+            &tmp,
+            "writes_prose_realignment_note_for_a_description_change",
+        );
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "p"])
+            .assert()
+            .success();
+
+        let note = fs::read_to_string(
+            tmp.path()
+                .join("specs/_recorded/001-p/notes/prose-realignment.md"),
+        )
+        .unwrap();
+        assert!(
+            note.contains("## domain/feature: Feature description"),
+            "{note}"
+        );
+        assert!(!note.contains("<name>"), "{note}");
+        assert!(
+            note.contains("The system SHALL do the second thing."),
+            "{note}"
+        );
+    }
+
+    #[test]
+    fn record_writes_prose_realignment_note() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "writes_prose_realignment_note");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .success();
+
+        let note =
+            fs::read_to_string(specs.join("_recorded/001-test-plan/notes/prose-realignment.md"))
+                .unwrap();
+        assert!(note.contains("# Prose Realignment: test-plan"), "{note}");
+        assert!(note.contains("## domain/feature: Background"), "{note}");
+        assert!(note.contains("**Before:**"), "{note}");
+        assert!(note.contains("* Context one."), "{note}");
+        assert!(note.contains("**After:**"), "{note}");
+        assert!(note.contains("* Context two."), "{note}");
+    }
+
+    #[test]
+    fn record_omits_prose_realignment_note() {
+        let tmp = TempDir::new().unwrap();
+        let specs = tmp.path().join("specs");
+        setup_record_fixture(&tmp, "omits_prose_realignment_note");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["record", "test-plan"])
+            .assert()
+            .success();
+
+        assert!(
+            !specs
+                .join("_recorded/001-test-plan/notes/prose-realignment.md")
+                .exists()
+        );
     }
 }

@@ -42,7 +42,7 @@ speq provides structural verification and exploration tools so AI agents can rel
 | Domain | A grouping of related features (e.g., `cli/`, `validation/`) |
 | Feature | A single capability defined with Background and Scenarios sections |
 | Scenario | A specific behavior described with GIVEN/WHEN/THEN steps |
-| Delta | A proposed change to a spec marked with `<!-- DELTA:NEW -->`, `<!-- DELTA:CHANGED -->`, or `<!-- DELTA:REMOVED -->` |
+| Delta | A proposed change to a spec marked with `<!-- DELTA:NEW -->`, `<!-- DELTA:CHANGED -->`, or `<!-- DELTA:REMOVED -->`, targeting a `### Scenario:`, or realigning an existing feature's `## Background` or `# Feature: <name>` description to match a scenario change |
 | Plan | A set of deltas in `_plans/<plan-name>/` awaiting approval |
 | Record | The action of moving approved deltas from `_plans/` to permanent specs in `specs/` |
 | ADR | An Architecture Decision Record — a single design decision captured as a slug-identified fragment in `specs/_decision/` |
