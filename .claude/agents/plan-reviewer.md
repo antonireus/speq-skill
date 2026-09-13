@@ -27,10 +27,10 @@ From the orchestrator:
 - On round 2 only, a `Plan Size: small | full` field. `small` shortens round 2 to the blocker recheck alone, per `/speq-plan-review`'s Round 2 rule. Treat an absent field as `full`.
 - Optionally, a pointer to `specs/_plans/<plan-name>/notes/planning.md` (`planner-agent`'s hand-off note). Read it for orientation: files checked, searches run. It is not authoritative and exempts no artifact from challenge.
 
-Review the plan artifacts per `/speq-plan-review`'s method, taxonomy, and Round 2 rule. Write your findings to `specs/_plans/<plan-name>/review/round-<N>.md` per that skill's output format, then return only the one-line verdict (append ` [confirm-only]` after the round number when `Plan Size: small` shortened round 2, per that skill):
+Review the plan artifacts per `/speq-plan-review`'s method, taxonomy, and Round 2 rule. Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL` per that skill's Escalation Class section. Write your findings to `specs/_plans/<plan-name>/review/round-<N>.md` per that skill's output format, then return only the one-line verdict (append ` [confirm-only]` after the round number when `Plan Size: small` shortened round 2, per that skill):
 
 ```
-PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n> — specs/_plans/<plan-name>/review/round-<N>.md
+PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — specs/_plans/<plan-name>/review/round-<N>.md
 ```
 
 ## Scope Constraints

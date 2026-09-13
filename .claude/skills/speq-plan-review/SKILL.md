@@ -68,20 +68,36 @@ Prose findings default to **ADVISORY**: style, not correctness. Escalate a `[PRO
 - **BLOCKER**: violates user intent, or the plan is infeasible/untestable as written. Gates the plan; the orchestrator loops it back to `planner-agent`.
 - **ADVISORY**: a real risk, tolerable if the human acknowledges it. Never blocks; surfaced in the orchestrator's final report only.
 
+## Escalation Class (BLOCKER only)
+
+Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL`. This decides two things downstream, both in the orchestrator: whether round 2 runs at all (only if round 1 raised a `HUMAN` finding — an all-`MECHANICAL` round 1 skips straight to a fix-and-validate pass and ships), and what happens if a finding is still open once review is done: `HUMAN` findings reach the user (via `AskUserQuestion` or an `OPEN QUESTIONS:` PR comment); `MECHANICAL` ones get one direct fix from `planner-agent`, no further review round, no human interruption unless that fix itself fails.
+
+`HUMAN` — same bar as `/speq-planning`'s headless escalation rule, applied here to a review finding instead of a planning choice:
+- Irreversible, or changes what the feature does for a user
+- Genuinely incompatible architectural designs with no clear winner
+- Security or compliance consequence
+- A load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies)
+
+A fact any of the plan's own artifacts, the codebase, or the recorded spec library *can* settle is `MECHANICAL`, however tedious checking it is — checking is not judgment. Don't stretch the fourth bullet to cover it: a stale test-name citation, a scenario that contradicts another scenario, or a tooling gap the plan's own text already describes are all things `plan-reviewer` can verify itself, not things it must ask about.
+
+`MECHANICAL` — default. Anything resolvable by reading the plan's own artifacts, no external judgment call needed: a spec delta that contradicts another delta or a recorded spec, a citation that doesn't match the real test suite, a missing delta for a location the plan itself says changed, an inconsistent task placement, an unimplementable tooling reference, an assumption the plan can verify against the codebase itself (add the verification as the `Fix:`, don't escalate the question). Every Intent Fidelity BLOCKER is `HUMAN` by definition — a substituted or dropped ask is never something the reviewer resolves unilaterally.
+
+Justify `HUMAN` in the finding's `Issue:` line. Don't default to `HUMAN` because a finding is hard to fix; default to `MECHANICAL` unless it actually requires a judgment call only the requester can make.
+
 ## Output Format
 
 Write the findings document to `specs/_plans/<plan-name>/review/round-<N>.md` per `references/review-findings-template.md`, creating the `review/` directory if absent. Then return exactly one line and nothing else:
 
 ```
-PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n> — specs/_plans/<plan-name>/review/round-<N>.md
+PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — specs/_plans/<plan-name>/review/round-<N>.md
 ```
 
-`INTENT` counts the Intent Fidelity BLOCKERs alone: a subset of `BLOCKERS`, matching the document's Summary block per the template's rules.
+`INTENT` counts the Intent Fidelity BLOCKERs alone: a subset of `BLOCKERS`, matching the document's Summary block per the template's rules. `HUMAN` counts every BLOCKER tagged `Escalation: HUMAN` (Intent Fidelity BLOCKERs included — they are always `HUMAN`); the rest of `BLOCKERS` are `MECHANICAL` and derivable as `BLOCKERS - HUMAN`.
 
 When round 2 ran confirm-only (`Plan Size: small`), append ` [confirm-only]` right after the round number, so the orchestrator's report can name which mode ran:
 
 ```
-PLAN REVIEW round 2 [confirm-only]: BLOCKERS: <n>, ADVISORY: 0, INTENT: <n> — specs/_plans/<plan-name>/review/round-2.md
+PLAN REVIEW round 2 [confirm-only]: BLOCKERS: <n>, ADVISORY: 0, INTENT: <n>, HUMAN: <n> — specs/_plans/<plan-name>/review/round-2.md
 ```
 
 `ADVISORY` is always `0` on a confirm-only round: it ran no axis pass that could surface or re-surface one. The orchestrator reads ADVISORY findings from round 1's file instead. Omit the `[confirm-only]` marker for round 1 and for a full round 2.

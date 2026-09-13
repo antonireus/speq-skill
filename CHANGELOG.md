@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.21.0
+
+- `plan-reviewer` now tags every BLOCKER `Escalation: HUMAN | MECHANICAL`. Only `HUMAN` findings (irreversible/user-facing, incompatible architecture, security/compliance, or a fact nothing in the plan or codebase can settle) reach the user after round 2; `MECHANICAL` ones (spec inconsistencies, stale citations, tooling gaps) get one direct fix pass instead. `/speq:plan`'s and `/speq:plan-pr`'s verdict line gains a `HUMAN:` count alongside `BLOCKERS`/`ADVISORY`/`INTENT` — a breaking change for anything parsing that line. PR/report comments now summarize findings and Design Decisions one line each with a file pointer, instead of pasting full text. ADR promotion for `[plan-review]`-sourced and Design Decisions entries now defaults to `no` unless the entry sets a genuinely new project-wide constraint
+- Round 2 of adversarial plan review now runs only when round 1 raised at least one `HUMAN`-tagged BLOCKER. A round 1 with `HUMAN: 0` (every BLOCKER `MECHANICAL`) goes straight from `planner-agent`'s fix pass to shipping — no second `plan-reviewer` round — unless a finding comes back `Could not resolve:` or `speq plan validate` fails, in which case it escalates same as any other unresolved finding
+
 ## 0.20.0
 
 - `DELTA:CHANGED` can now target a feature's `## Background` section or its `# Feature: <name>` description, not just `### Scenario:` blocks — `speq plan validate` and `speq record` both reject a `DELTA:NEW`/`DELTA:REMOVED` on either anchor, an unrecognized anchor, or two blocks colliding on the same anchor, closing the silent-no-op and file-corrupting failure modes those blocks used to hit

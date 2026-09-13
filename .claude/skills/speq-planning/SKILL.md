@@ -84,7 +84,9 @@ Create `specs/_plans/<plan-name>/decision-log.md` from `/speq-plan`'s `reference
 - A deliberate rejection of a commonly expected approach
 - A constraint that future planners need to know to avoid re-litigating
 
-Set `Promotes to ADR: no` for local design choices, scope trims, and implementation details.
+Set `Promotes to ADR: no` for local design choices, scope trims, and implementation details. This applies to every decision entry, Design Decisions and Review Findings alike: one ADR per genuinely new project-wide constraint, never one per entry or per resolved finding. A plan with ten Design Decisions entries or ten resolved blockers does not owe ten ADRs — most decisions in a normal plan are local (this file's structure, this feature's naming) and stay `no`. Never promote a local file-placement or process detail (where a note lives, how a plan's own scratch state is organized) just because it was deliberate enough to write down.
+
+**Review Findings entries lean further to `no`.** A `[plan-review]`-prefixed entry (Revision Mode, below) records a mistake this plan made and then corrected, not automatically a new project-wide pattern. Set `yes` only when the fix itself established a constraint future planners would otherwise re-litigate — not merely because the finding was hard to resolve. Never promote a process or tooling workaround specific to this plan's own mechanics (a spec-merge gap, a review-loop correction, a task-reordering fix), or a one-off bug fix with no bearing outside this plan. A genuine project-wide testing convention (e.g., this file's own "integration tests by default, unit tests only for isolated pure computation" rule) can still promote — the exclusion is for a test *choice scoped to this plan's own tests*, not for testing conventions in general.
 
 If a decision supersedes an earlier one, name the superseded decision's title in the entry. `recorder-agent` maps that title to the superseded ADR's slug at promotion.
 
@@ -173,4 +175,5 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 - Address only the BLOCKER findings. Execute each one's `Fix:` line: an imperative naming the artifact, section, and concrete change. Revise exactly what it points to. Do not rewrite unrelated content. Do not act on ADVISORY findings.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
+- Return one line per blocker you addressed: `Resolved: <title> — <evidence>` or `Could not resolve: <title> — <why>`. The orchestrator uses this to decide whether a further review round is needed — do not omit it, even when every finding resolved cleanly.
 - If resolving a blocker surfaces a genuinely irreducible new decision, escalate it exactly as during initial planning (interactive: signal back with a concrete question; headless: `OPEN QUESTIONS:` sentinel).

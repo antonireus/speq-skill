@@ -121,26 +121,28 @@ plan.md, decision-log.md, and every specs/_plans/<plan-name>/**/spec.md delta
 <if active: note ".speq/plan-hook.md — read it and apply it" — otherwise omit this section>
 ```
 
-It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and returns only `PLAN REVIEW round 1: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n> — <path>`. `INTENT` counts the BLOCKERs on the Intent Fidelity axis alone.
+It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and returns only `PLAN REVIEW round 1: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — <path>`. `INTENT` counts the BLOCKERs on the Intent Fidelity axis alone; `HUMAN` counts every BLOCKER tagged `Escalation: HUMAN` per `/speq-plan-review`'s Escalation Class section — the rest are `MECHANICAL`.
 
 **If `INTENT > 0`:** the reviewer holds that the plan solves a different problem than the one asked. Read the Intent-Fidelity findings from the round file. Present them via `AskUserQuestion` before any revision. The user accepts the plan as-is, or gives guidance and you respawn `planner-agent` manually.
 
 **If `INTENT == 0` and BLOCKER findings exist:**
 
-**Plan Size classification** (compute before respawning `plan-reviewer` for round 2): the plan is `small` when all three hold — the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty. Otherwise `full`.
+1. Respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings from that file, execute each `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, re-run `speq plan validate`, and return its per-finding `Resolved:`/`Could not resolve:` report per `/speq-planning`'s Revision Mode.
+2. **Round 2 runs only if round 1's `HUMAN` count was greater than 0.** A `HUMAN: 0` round 1 means every BLOCKER was `MECHANICAL` — the reviewer already judged none needed adversarial re-checking, only a fix. Skip to the ship decision below without respawning `plan-reviewer`.
+3. **`HUMAN > 0`:** compute Plan Size (the plan is `small` when all three hold — the plan-name's verb, per the verb table, is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty; otherwise `full`), then respawn `plan-reviewer` for round 2 with the path to `review/round-1.md` plus `Plan Size: small | full`, so it confirms each round-1 BLOCKER is resolved before checking for new ones (or, on `small`, confirms and stops there). Do not run a third adversarial round, even if round 2 raises new BLOCKERs.
 
-1. Respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings from that file, execute each `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, and re-run `speq plan validate`.
-2. Respawn `plan-reviewer` for round 2 with the same path plus the computed `Plan Size: small | full` field, so it confirms each round-1 BLOCKER is resolved before checking for new ones (or, on `small`, confirms and stops there).
-3. Do not run a third round, even if round 2 raises new BLOCKERs.
+**BLOCKERs remaining after round 2, split by `Escalation`:**
 
-**If BLOCKERs remain after round 2:** read the unresolved BLOCKER findings from `review/round-2.md` and use `AskUserQuestion`. The user accepts the risk and proceeds, or gives guidance and you respawn `planner-agent` manually.
+- **`MECHANICAL` remainder:** respawn `planner-agent` once more with the still-open `MECHANICAL` findings from `review/round-2.md`; same Revision Mode format. Don't interrupt the user for these unless one comes back `Could not resolve:` or `speq plan validate` fails — then it joins the `HUMAN` remainder below, with the `Could not resolve:` reason as the question.
+- **`HUMAN` remainder** (plus any `MECHANICAL` finding a fix pass could not close): read those findings and use `AskUserQuestion`, one line of context each plus a pointer to the round file for detail. The user accepts the risk and proceeds, or gives guidance and you respawn `planner-agent` manually.
 
-**ADVISORY findings** never loop and are never persisted. Read them from the last round file and carry them into step 7's report. If round 2 ran confirm-only (`Plan Size: small`), it produced no ADVISORY findings of its own — read them from round 1's file instead.
+**ADVISORY findings** never loop and are never persisted. Read them from the last round file that actually ran and carry them into step 7's report — round 1's, if round 2 was skipped entirely (`HUMAN: 0`) or ran confirm-only (`Plan Size: small`); round 2's otherwise.
 
 ### 7. Explain next steps (orchestrator)
 
 - Report that the plan is created and list all created files
 - Report ADVISORY findings from step 6, read from the round file
+- If step 6's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, name it in one line ("N mechanical findings fixed") — do not restate each one
 - Tell the user to run `/speq-implement <plan-name>` to continue
 - Tell the user to run `/clear` to implement with a fresh context window
 - If Claude Code is in "plan mode", call `ExitPlanMode` and ask to proceed with cleared context
@@ -170,6 +172,8 @@ Each sub-agent pins its own model and effort in its frontmatter, so planning qua
 |---------|-----------|
 | Authoring plan.md or spec deltas in the orchestrator | `planner-agent` owns all plan authoring |
 | Skipping the clarifying interview | Content comes from user answers, never assumptions |
-| A third review round | Review is bounded to 2 rounds; after that the user decides |
+| A third adversarial review round | Bounded to 2 — a `MECHANICAL` remainder gets one direct fix pass instead, a `HUMAN` remainder goes to the user |
+| Asking the user about a `MECHANICAL` finding | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly, no interruption |
+| Running round 2 when round 1's `HUMAN` count is 0 | A round with nothing judgment-worthy left doesn't need a second adversarial pass — fix and ship |
 | Persisting ADVISORY findings or looping on them | Report-only; they never gate |
 | Embedding spec content in plan.md | Plans reference delta files |
