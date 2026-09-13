@@ -164,7 +164,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 **Ship decision, whichever path produced the final fix pass** (round 1 alone when `HUMAN: 0`, or the round-2 `MECHANICAL` follow-up above): clean only if `speq plan validate` passed AND every finding came back `Resolved:`. Any `Could not resolve:` line, or a failed re-validate, is not a clean return — fold that finding into `OPEN QUESTIONS:` too, with its `Could not resolve:` reason as the question text. A `MECHANICAL` tag means the reviewer judged it not to need human judgment; it does not guarantee a fix exists on the first retry, and this is not the place to find out by shipping it silently.
 
-**ADVISORY findings:** carry into step 7's PR body/report, read from the last round file that actually ran — round 1's, if round 2 was skipped entirely (`HUMAN: 0`) or ran confirm-only (`Plan Size: small`); round 2's otherwise. Never block or persist them.
+**ADVISORY findings:** carry into step 7's terminal report only — never a PR comment or body content, per step 6. Read from the last round file that actually ran — round 1's, if round 2 was skipped entirely (`HUMAN: 0`) or ran confirm-only (`Plan Size: small`); round 2's otherwise. Never block or persist them.
 
 ### 6. Branch on the Result
 
@@ -177,9 +177,9 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
      paths: the plan directory, excluding specs/_plans/<plan-name>/notes/planning.md
      message: spec(plan): <plan-name>
      title: <the derived <type>(<scope>): <slug>>
-     body: summarize the plan's Features table and task count, include the
-           plan.md ## Impact section verbatim as its own "## Impact" heading,
-           ending "Draft pending implementation — run /speq:implement-pr <plan-name> to implement and mark ready"
+     body: per references/pr-body-template.md, ending "Draft pending
+           implementation — run /speq:implement-pr <plan-name> to implement
+           and mark ready"
    ```
 3. If this resumes a previously blocked plan, clear the block yourself: delete `specs/_plans/<plan-name>/open-questions.md` and the `> **Status:** blocked …` banner line from `plan.md`, then:
    ```
@@ -190,12 +190,8 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
    Run — operation: push (per /speq-git-operations)
    ```
    The PR stays a draft. `speq-implement-pr` is the only skill that marks it ready.
-4. If step 5 reported a non-zero `ADVISORY` count, or `decision-log.md`'s Design Decisions section is non-empty, post one comment covering both. Skip if there is nothing to flag. Read the ADVISORY findings from the last round file that has any — round 1's, if round 2 ran confirm-only. One line per item — tag and title for a finding, title alone for a decision — each with a pointer to its file; never the finding's `Issue`/`Fix` body or a decision's `Rationale`. Compose the body per `/speq-writing-guardrails`' PR-facing content rule:
-   ```
-   Run — operation: comment-pr (per /speq-git-operations)
-     body: one line per ADVISORY finding (tag + title, linking review/round-<N>.md)
-           and one line per Design Decisions entry (title alone, linking decision-log.md)
-   ```
+
+No comment on a clean return. `ADVISORY` findings and Design Decisions entries never need human attention — that is what makes them `ADVISORY` and not `BLOCKER` — so they stay silent in `review/round-<N>.md` and `decision-log.md`, reachable through the PR body's `<details>` pointer for anyone who wants them. A PR comment is for something that needs the approver's eyes; nothing on this path does.
 
 **`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass — round 1's own when `HUMAN: 0`, or round 2's follow-up — came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
 
@@ -211,7 +207,7 @@ Keep each question short: state the decision in 1-2 sentences and point to the r
    - [ ] <question 2>
    ```
 2. Insert `> **Status:** blocked — see open-questions.md` as the first line under `plan.md`'s H1. Skip if already present.
-3. Compose the questions checklist as the PR comment body. Append any ADVISORY findings, one line each (tag + title, linking `review/round-<N>.md`) — never the full `Issue`/`Fix` body. One comment, not two.
+3. Compose the questions checklist as the PR comment body. Nothing else goes in it — `ADVISORY` findings and Design Decisions entries don't need human attention, so they stay out of the comment the same as on the clean path; they're already in `review/round-<N>.md`/`decision-log.md` for anyone who opens them.
 
 Then, with one composite call:
 ```
@@ -219,17 +215,15 @@ Run — operation: flag-blocked (per /speq-git-operations)
   paths: the plan directory, excluding specs/_plans/<plan-name>/notes/planning.md
   message: spec(plan): flag open questions for <plan-name>
   title: <the derived <type>(<scope>): <slug>>
-  body: <blocked-plan summary>, including plan.md's ## Impact section
-        verbatim as its own "## Impact" heading if populated — a blocked
+  body: per references/pr-body-template.md's blocked-path rule — a blocked
         plan may have partial Impact info; include it as-is, never
         fabricate the rest
-  comment_body: <the questions checklist, plus one line per ADVISORY finding
-        (tag + title, linking review/round-<N>.md) — never the full finding text>
+  comment_body: the questions checklist only — nothing else
 ```
 
 ### 7. Report (orchestrator)
 
-Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced. Both are also posted as a PR comment per step 6. If step 5's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, and it fully resolved, name it in one line ("N mechanical findings fixed, no human input needed") — do not restate what each one was; that detail lives in the round file.
+Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced — terminal only, per step 6 neither ever reaches the PR. If step 5's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, and it fully resolved, name it in one line ("N mechanical findings fixed, no human input needed") — do not restate what each one was; that detail lives in the round file.
 
 ## Spec Hierarchy (reference)
 
@@ -261,3 +255,4 @@ specs/
 | Pasting a finding's full Issue/Fix text into a PR comment | State the decision in 1-2 sentences, link to `review/round-<N>.md` for the rest |
 | Escalating a `MECHANICAL` finding to the human because round 2 didn't close it | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly |
 | Running round 2 when round 1's `HUMAN` count is 0 | A round with nothing judgment-worthy left doesn't need a second adversarial pass — fix and ship |
+| Posting `ADVISORY` findings or Design Decisions as a PR comment | They never need human attention by definition — silent in `review/round-<N>.md`/`decision-log.md`, reachable via the body's `<details>` pointer |

@@ -110,7 +110,10 @@ Run — operation: ship-ready (per /speq-git-operations)
          deletion of specs/_plans/<plan-name>/
   message: <type>(<scope>): record <plan-name>    # type + scope per speq-plan-pr's PR-title derivation rule
   title: <type>(<scope>): <slug>    # same derivation rule as speq-plan-pr
-  body: summary of the implementation diff, both test-suite results (integration + e2e), and the /speq:record outcome
+  body: per /speq-plan-pr's references/pr-body-template.md — update Current
+        State/What Changes if implementation diverged from the plan, fold
+        in both test-suite results (integration + e2e) and the /speq:record
+        outcome into the Test plan checklist, keep the <details> pointer
 ```
 
 `ship-ready`'s create-pr step returns the draft PR `speq-plan-pr` opened (or opens one if the plan was only implemented locally), and its ready-pr step marks it ready.
