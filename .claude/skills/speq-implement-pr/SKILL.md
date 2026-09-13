@@ -118,17 +118,13 @@ Run — operation: ship-ready (per /speq-git-operations)
 
 `ship-ready`'s create-pr step returns the draft PR `speq-plan-pr` opened (or opens one if the plan was only implemented locally), and its ready-pr step marks it ready.
 
-**C2. Comment**: post the verification summary. Compose the comment body per `speq-writing-guardrails`' PR-facing content rule before calling `comment-pr`:
+**C2. Comment**: post the verification summary per `references/implementation-summary-template.md`, built from `<archive-path>/verification-report.md` (the `specs/_recorded/NNN-<plan-name>` path `/speq-record` reported). Compose per `speq-writing-guardrails`' PR-facing content rule before calling `comment-pr`:
 
 ```
 Run — operation: comment-pr (per /speq-git-operations)
-  body: condensed verification summary — the Verdict table and Notes from
-        <archive-path>/verification-report.md (the specs/_recorded/NNN-<plan-name>
-        path /speq-record reported), plus "Full evidence:
-        specs/_plans/<plan-name>/verification-report.md (committed in this
-        branch's implementation commit)".
-        Do not duplicate the Tool Evidence / Scenario Coverage tables —
-        they are already in the branch's history.
+  body: per /speq-implement's references/implementation-summary-template.md,
+        ending "Full evidence: specs/_plans/<plan-name>/verification-report.md
+        (committed in this branch's implementation commit)"
 ```
 
 **C3. Finish**: mark `[x] pr-ready` at `specs/_recorded/*-<plan-name>/tasks.md`, then report the finished PR and leave it for human review. Re-entry after a crash between C1 and C3 is safe: `ship-ready`'s commit no-ops on nothing-to-commit, and its create-pr/ready-pr steps reuse the existing PR.

@@ -240,19 +240,13 @@ Save to: `specs/_plans/<plan-name>/verification-report.md`
 
 ### Phase 7: Completion
 
+Print the summary per `references/implementation-summary-template.md`, built from the `verification-report.md` Phase 6 just wrote, ending:
+
 ```
-✓ All tasks in tasks.md marked [x]
-✓ Code review passed (or findings fixed)
-✓ Verification passed
-✓ Report generated
-
-Code review: <n> findings — <n> fixed
-Verification report: specs/_plans/<plan-name>/verification-report.md
-
 Ready for: /speq-record <plan-name>
 ```
 
-The two report lines are the run's machine-readable handoff: a headless caller folds the code-review line into its condensed PR comment, and `/speq-record` gates on the report path.
+This is terminal output for whoever ran `/speq-implement` — interactive or the `speq-implement-pr` orchestrator watching this session. It is not a PR comment: `speq-implement-pr` composes its own PR comment straight from `verification-report.md` in its own Phase C, per the same template — it does not parse this printed text.
 
 ## Context Recovery
 

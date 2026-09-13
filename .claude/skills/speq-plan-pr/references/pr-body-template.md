@@ -1,6 +1,8 @@
 # PR Body Template
 
-Used by `/speq-plan-pr` (draft, blocked) and `/speq-implement-pr` (ready). A human approving this PR gets what they need from one read of the body — the full trail is one click away, never pasted inline.
+Used by `/speq-plan-pr` (draft, blocked) and `/speq-implement-pr` (ready) as the PR body — and by `/speq-plan`, which prints the same skeleton as terminal output for the human running it interactively, instead of posting it anywhere. Same content either way; only the destination differs. A human reading it gets what they need in one pass — the full trail is one click (or one more line) away, never pasted inline.
+
+On a terminal print, drop the `<details>`/`<summary>` HTML — it's a GitHub folding mechanic with no terminal equivalent — and print its file list as a plain line instead. Everything else in the skeleton stays identical.
 
 ## Skeleton
 

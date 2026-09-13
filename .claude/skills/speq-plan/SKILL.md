@@ -140,7 +140,9 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 ### 7. Explain next steps (orchestrator)
 
-- Report that the plan is created and list all created files
+Print the plan's summary per `/speq-plan-pr`'s `references/pr-body-template.md` — Current State / What Changes / Impact, composed from `plan.md`/`decision-log.md` the same way `speq-plan-pr` composes the PR body from them. This is terminal output, not a PR: print the `<details>` block's file list as a plain line, not the HTML fold, and the Test plan checklist as-is. `speq-plan-pr` and `speq-implement-pr` are the only skills that ever post this content as a PR; this step never touches git or GitHub.
+
+Then:
 - Report ADVISORY findings from step 6, read from the round file
 - If step 6's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, name it in one line ("N mechanical findings fixed") — do not restate each one
 - Tell the user to run `/speq-implement <plan-name>` to continue
