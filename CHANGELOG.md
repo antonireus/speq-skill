@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.22.0
+
+- Serena now starts via a `serena` command installed once with `uv tool install -p 3.13 serena-agent`, instead of a per-start `uvx` fetch from its git repository. The installer provisions the tool (optional, non-fatal if `uv` is absent) and replaces a stale git-sourced Codex registration on re-run. Closes #17
+- `Promotes to ADR: yes` now requires a behavior, architecture, or design change; a workflow or procedural decision defaults to `no` unless it sets a binding project-wide convention. A minor decision now records as a short-form ADR (no `Options Considered`/`Consequences`). `plan-reviewer` gains `[IMPLEMENTATION_LEAKAGE]` (a spec Background states a fact no scenario depends on) and `[ADR_OVERPROMOTION]` (an entry fails the new gate). Closes #18
+- Folded `specs/_decision/001-*.md`, `003-*.md`, and `005-*.md` from 19 ADRs down to 10 under the new gate, correcting a stale fact along the way (the embedding model installs from HuggingFace, not GitHub release assets)
+
 ## 0.21.0
 
 - `plan-reviewer` now tags every BLOCKER `Escalation: HUMAN | MECHANICAL`. Only `HUMAN` findings (irreversible/user-facing, incompatible architecture, security/compliance, or a fact nothing in the plan or codebase can settle) reach the user after round 2; `MECHANICAL` ones (spec inconsistencies, stale citations, tooling gaps) get one direct fix pass instead. `/speq:plan`'s and `/speq:plan-pr`'s verdict line gains a `HUMAN:` count alongside `BLOCKERS`/`ADVISORY`/`INTENT` — a breaking change for anything parsing that line. PR/report comments now summarize findings and Design Decisions one line each with a file pointer, instead of pasting full text. ADR promotion for `[plan-review]`-sourced and Design Decisions entries now defaults to `no` unless the entry sets a genuinely new project-wide constraint
