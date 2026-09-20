@@ -71,10 +71,12 @@ Each generated plugin configures its MCP servers in a `.mcp.json` file:
 
 The Claude plugin starts Serena with the Claude Code context. The Codex plugin starts Serena with the Codex context and the `--project-from-cwd` flag. This setup follows the [Codex client guidance](https://oraios.github.io/serena/02-usage/030_clients.html#codex-cli-and-app) from Serena.
 
+Both templates start Serena by the bare `serena` command. The installer installs the Serena CLI once with `uv tool install -p 3.13 serena-agent`, rather than fetching it from git on every server start.
+
 When the Codex CLI is available, the installer takes three steps. It registers the local Codex marketplace with `codex plugin marketplace add`. It keeps the MCP declarations in the generated plugin payload. Then it registers the Codex MCP servers with these commands:
 
 ```bash
-codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex
+codex mcp add serena -- serena start-mcp-server --project-from-cwd --context=codex
 codex mcp add context7 -- npx -y @upstash/context7-mcp
 ```
 

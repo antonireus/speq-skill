@@ -122,4 +122,6 @@ if [ -d "$INSTALL_DIR" ]; then
 fi
 
 echo ""
+echo "Note: the Serena CLI is not removed by this script. To remove it: uv tool uninstall serena-agent"
+echo ""
 echo "=== Uninstall complete ==="

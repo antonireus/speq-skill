@@ -103,6 +103,11 @@ if ! grep -q '^\[mcp_servers\.serena\]' ~/.codex/config.toml; then
     cat ~/.codex/config.toml
     exit 1
 fi
+if ! grep -q '^command = "serena"' ~/.codex/config.toml; then
+    echo "FAIL: Codex Serena MCP registration is not by-command"
+    cat ~/.codex/config.toml
+    exit 1
+fi
 if ! grep -q '^\[mcp_servers\.context7\]' ~/.codex/config.toml; then
     echo "FAIL: Codex Context7 MCP registration missing"
     cat ~/.codex/config.toml

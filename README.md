@@ -117,7 +117,7 @@ For autonomous pipelines use, `/speq:plan-pr` and `/speq:implement-pr` run the s
 
 ## Dependencies
 
-This plugin uses [Serena](https://github.com/oraios/serena) and [Context7](https://github.com/upstash/context7) MCP servers. The generated plugin payload declares them as a convenience — they are standard open-source servers installed from their respective repositories at runtime. Their behavior, limitations, and conditions are governed by their own documentation. Context7's MCP server connects to a cloud service with a free tier — see [Context7](https://context7.com).
+This plugin uses [Serena](https://github.com/oraios/serena) and [Context7](https://github.com/upstash/context7) MCP servers. The generated plugin payload declares them as a convenience — they are standard open-source servers. The installer installs Serena as a `uv` tool (`uv tool install -p 3.13 serena-agent`); Context7 runs via `npx` at server start. Their behavior, limitations, and conditions are governed by their own documentation. Context7's MCP server connects to a cloud service with a free tier — see [Context7](https://context7.com).
 
 The `speq` CLI uses [snowflake-arctic-embed-xs](https://huggingface.co/Snowflake/snowflake-arctic-embed-xs) for semantic search. The installer provisions the model files (~23MB) automatically into `~/.cache/speq/models/` (or `$SPEQ_CACHE_DIR/models/` if set). Inference runs fully offline via pure-Rust BERT inference (candle) — no additional runtime or system library is required.
 

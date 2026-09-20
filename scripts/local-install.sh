@@ -12,6 +12,7 @@ INSTALL_DIR="${HOME}/.speq-skill"
 CODEX_MARKETPLACE_NAME="speq-skill-local"
 CODEX_MARKETPLACE_ROOT="${INSTALL_DIR}/codex"
 CODEX_SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
+CODEX_SERENA_ADD="codex mcp add serena -- serena start-mcp-server --project-from-cwd --context=codex"
 
 cd "$PROJECT_ROOT"
 
@@ -42,13 +43,30 @@ register_codex_mcp_servers() {
     if command -v codex &> /dev/null; then
         echo "Registering Codex MCP servers..."
 
-        if codex mcp get serena >/dev/null 2>&1; then
-            echo "Codex MCP server already registered: serena"
-        elif codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex >/dev/null 2>&1; then
+        local serena_get_output
+        if serena_get_output=$(codex mcp get serena 2>&1); then
+            if echo "$serena_get_output" | grep -qE '^[[:space:]]*command: uvx$'; then
+                if codex mcp remove serena >/dev/null 2>&1; then
+                    echo "Replacing git-sourced Codex MCP server registration: serena"
+                    if $CODEX_SERENA_ADD >/dev/null 2>&1; then
+                        echo "Codex MCP server: serena"
+                    else
+                        echo "Codex MCP server registration failed: serena"
+                        echo "  Run manually: $CODEX_SERENA_ADD"
+                    fi
+                else
+                    echo "Failed to remove existing Codex MCP server registration: serena"
+                    echo "  Run manually: codex mcp remove serena"
+                    echo "  Then: $CODEX_SERENA_ADD"
+                fi
+            else
+                echo "Codex MCP server already registered: serena"
+            fi
+        elif $CODEX_SERENA_ADD >/dev/null 2>&1; then
             echo "Codex MCP server: serena"
         else
             echo "Codex MCP server registration failed: serena"
-            echo "  Run manually: codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex"
+            echo "  Run manually: $CODEX_SERENA_ADD"
         fi
 
         if codex mcp get context7 >/dev/null 2>&1; then
@@ -61,7 +79,7 @@ register_codex_mcp_servers() {
         fi
     else
         echo "Codex CLI not found. Register MCP servers after installing Codex:"
-        echo "  codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex"
+        echo "  $CODEX_SERENA_ADD"
         echo "  codex mcp add context7 -- npx -y @upstash/context7-mcp"
     fi
 }
@@ -100,6 +118,31 @@ install_codex_skills() {
     echo "Codex skills: ${CODEX_SKILLS_DIR}"
 }
 
+# Install the Serena CLI as a standalone uv tool, so the MCP server template
+# can start it by the bare `serena` command instead of a per-start `uvx` git fetch.
+install_serena_tool() {
+    if command -v serena &> /dev/null; then
+        echo "Serena CLI already installed: $(command -v serena)"
+        return 0
+    fi
+
+    if command -v uv &> /dev/null; then
+        echo "Installing Serena CLI via uv..."
+        if uv tool install -p 3.13 serena-agent >/dev/null 2>&1; then
+            echo "Installed Serena CLI via uv"
+        else
+            echo "Serena CLI installation failed."
+            echo "  Run manually: uv tool install -p 3.13 serena-agent"
+        fi
+    else
+        echo "uv not found. Install uv, then install the Serena CLI:"
+        echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+        echo "  uv tool install -p 3.13 serena-agent"
+    fi
+
+    return 0
+}
+
 # 1. Build release binary if not present
 if [ ! -f "target/release/speq" ]; then
     echo "Building release binary..."
@@ -115,6 +158,9 @@ mkdir -p "$BIN_DIR"
 echo "Installing CLI to ${BIN_DIR}/speq..."
 cp "target/release/speq" "$BIN_DIR/speq"
 chmod +x "$BIN_DIR/speq"
+
+# 3b. Install the Serena CLI as a standalone uv tool
+install_serena_tool
 
 # 4. Install Claude plugin via marketplace
 if command -v claude &> /dev/null; then

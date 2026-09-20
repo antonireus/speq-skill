@@ -10,6 +10,7 @@ MARKETPLACE_DIR="$HOME/.speq-skill"
 CODEX_MARKETPLACE_NAME="speq-skill-local"
 CODEX_MARKETPLACE_ROOT="$MARKETPLACE_DIR/codex"
 CODEX_SKILLS_DIR="${CODEX_HOME:-$HOME/.codex}/skills"
+CODEX_SERENA_ADD="codex mcp add serena -- serena start-mcp-server --project-from-cwd --context=codex"
 
 # Colors
 RED='\033[0;31m'
@@ -114,13 +115,30 @@ register_codex_mcp_servers() {
     if command -v codex &> /dev/null; then
         info "Registering Codex MCP servers..."
 
-        if codex mcp get serena >/dev/null 2>&1; then
-            info "Codex MCP server already registered: serena"
-        elif codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex >/dev/null 2>&1; then
+        local serena_get_output
+        if serena_get_output=$(codex mcp get serena 2>&1); then
+            if echo "$serena_get_output" | grep -qE '^[[:space:]]*command: uvx$'; then
+                if codex mcp remove serena >/dev/null 2>&1; then
+                    info "Replacing git-sourced Codex MCP server registration: serena"
+                    if $CODEX_SERENA_ADD >/dev/null 2>&1; then
+                        info "Registered Codex MCP server: serena"
+                    else
+                        warn "Codex MCP server registration failed: serena"
+                        echo "  Run manually: $CODEX_SERENA_ADD"
+                    fi
+                else
+                    warn "Failed to remove existing Codex MCP server registration: serena"
+                    echo "  Run manually: codex mcp remove serena"
+                    echo "  Then: $CODEX_SERENA_ADD"
+                fi
+            else
+                info "Codex MCP server already registered: serena"
+            fi
+        elif $CODEX_SERENA_ADD >/dev/null 2>&1; then
             info "Registered Codex MCP server: serena"
         else
             warn "Codex MCP server registration failed: serena"
-            echo "  Run manually: codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex"
+            echo "  Run manually: $CODEX_SERENA_ADD"
         fi
 
         if codex mcp get context7 >/dev/null 2>&1; then
@@ -133,7 +151,7 @@ register_codex_mcp_servers() {
         fi
     else
         warn "Codex CLI not found. Register MCP servers after installing Codex:"
-        echo "  codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex"
+        echo "  $CODEX_SERENA_ADD"
         echo "  codex mcp add context7 -- npx -y @upstash/context7-mcp"
     fi
 }
@@ -375,6 +393,31 @@ default_cache_dir() {
     esac
 }
 
+# Install the Serena CLI as a standalone uv tool, so the MCP server template
+# can start it by the bare `serena` command instead of a per-start `uvx` git fetch.
+install_serena_tool() {
+    if command -v serena &> /dev/null; then
+        info "Serena CLI already installed: $(command -v serena)"
+        return 0
+    fi
+
+    if command -v uv &> /dev/null; then
+        info "Installing Serena CLI via uv..."
+        if uv tool install -p 3.13 serena-agent >/dev/null 2>&1; then
+            info "Installed Serena CLI via uv"
+        else
+            warn "Serena CLI installation failed."
+            echo "  Run manually: uv tool install -p 3.13 serena-agent"
+        fi
+    else
+        warn "uv not found. Install uv, then install the Serena CLI:"
+        echo "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+        echo "  uv tool install -p 3.13 serena-agent"
+    fi
+
+    return 0
+}
+
 # Download the embedding model files from HuggingFace into the model cache directory
 provision_embedding_model() {
     local HUGGINGFACE_BASE="https://huggingface.co/Snowflake/snowflake-arctic-embed-xs/resolve/main"
@@ -464,6 +507,9 @@ main() {
         fi
         build_from_source "$version"
     fi
+
+    # Install the Serena CLI as a standalone uv tool
+    install_serena_tool
 
     # Provision embedding model
     provision_embedding_model

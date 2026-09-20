@@ -20,12 +20,14 @@ Open Claude Code or Codex. Start with the matching trigger: `/speq:mission` in C
 - macOS or Linux (Windows via WSL)
 - Claude Code CLI or Codex CLI/App, installed and configured
 - Rust toolchain, needed only if your platform has no pre-built binary. If Rust is missing, the installer installs it for you. You can also get Rust from [rustup](https://rustup.rs/).
+- `uv`, needed only to install the Serena CLI. Get it from [astral.sh/uv](https://astral.sh/uv/). If `uv` is missing, the installer warns and continues; install Serena manually afterward.
 
 ## What the installer installs
 
 | Component | Location |
 |-----------|----------|
 | `speq` CLI | `~/.local/bin/speq` |
+| Serena CLI | `uv tool install`, on the `uv` tool PATH |
 | Plugin files | `~/.speq-skill/` |
 | Claude marketplace payload | `~/.speq-skill/` |
 | Codex plugin payload | `~/.speq-skill/codex/plugins/speq-skill/` |
@@ -37,6 +39,7 @@ Open Claude Code or Codex. Start with the matching trigger: `/speq:mission` in C
 
 The installer also:
 - Copies the pre-built `speq` binary to your PATH. On platforms without one, for example Intel Mac, it downloads the release source instead and builds `speq` with the Rust toolchain.
+- Installs the Serena CLI with `uv tool install -p 3.13 serena-agent` when `uv` is available and `serena` is not already on your PATH
 - Installs the speq-skill plugin for Claude Code and Codex
 - When Codex is installed, registers the local Codex marketplace via `codex plugin marketplace add`
 - When Codex is installed, registers Serena and Context7 via `codex mcp add`
@@ -115,6 +118,14 @@ If you installed from source, run locally instead:
 
 Add `~/.local/bin` to your PATH.
 
+### `serena: command not found`
+
+The installer installs the Serena CLI with `uv`. If `uv` was missing during installation, or the `uv tool install` step failed, install it manually:
+
+```bash
+uv tool install -p 3.13 serena-agent
+```
+
 ### Rust build errors
 
 If your platform has no pre-built binary, or you ran `./scripts/local-install.sh` directly, update your Rust toolchain:
@@ -168,7 +179,7 @@ rustup update
 
 5. If missing, register them manually:
    ```bash
-   codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex
+   codex mcp add serena -- serena start-mcp-server --project-from-cwd --context=codex
    codex mcp add context7 -- npx -y @upstash/context7-mcp
    ```
 
@@ -197,7 +208,7 @@ The plugin depends on the Serena and Context7 MCP servers. If you see connection
 3. If you use Codex, verify that the marketplace and MCP servers are registered:
    ```bash
    codex plugin marketplace add ~/.speq-skill/codex
-   codex mcp add serena -- uvx --from git+https://github.com/oraios/serena serena start-mcp-server --project-from-cwd --context=codex
+   codex mcp add serena -- serena start-mcp-server --project-from-cwd --context=codex
    codex mcp add context7 -- npx -y @upstash/context7-mcp
    ```
 

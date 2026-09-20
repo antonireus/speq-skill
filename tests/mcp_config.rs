@@ -29,6 +29,30 @@ mod claude_code_config {
     }
 
     #[test]
+    fn mcp_json_starts_serena_by_command() {
+        let content = read_mcp_template("mcp.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&content).expect("mcp.json must be valid JSON");
+
+        assert_eq!(v["serena"]["command"], "serena");
+        assert_eq!(
+            v["serena"]["args"],
+            serde_json::json!([
+                "start-mcp-server",
+                "--context",
+                "claude-code",
+                "--project-from-cwd"
+            ])
+        );
+
+        assert!(!content.contains("uvx"), "mcp.json must not reference uvx");
+        assert!(
+            !content.contains("git+https://github.com/oraios/serena"),
+            "mcp.json must not fetch serena from git"
+        );
+    }
+
+    #[test]
     fn mcp_json_uses_flat_format() {
         let content = read_mcp_template("mcp.json");
         let v: serde_json::Value =
@@ -85,6 +109,29 @@ mod claude_code_config {
             "built .mcp.json must not have a top-level mcpServers wrapper"
         );
 
+        assert_eq!(v["serena"]["command"], "serena");
+        assert_eq!(
+            v["serena"]["args"],
+            serde_json::json!([
+                "start-mcp-server",
+                "--context",
+                "claude-code",
+                "--project-from-cwd"
+            ])
+        );
+
+        let codex_output_path =
+            Path::new(manifest_dir).join("dist/marketplace/codex/plugins/speq-skill/.mcp.json");
+        let codex_content = fs::read_to_string(&codex_output_path)
+            .expect("failed to read dist/marketplace/codex/plugins/speq-skill/.mcp.json");
+        let codex_v: serde_json::Value =
+            serde_json::from_str(&codex_content).expect("built codex .mcp.json must be valid JSON");
+        assert_eq!(codex_v["serena"]["command"], "serena");
+        assert_eq!(
+            codex_v["serena"]["args"],
+            serde_json::json!(["start-mcp-server", "--project-from-cwd", "--context=codex"])
+        );
+
         let plugin_json_path = Path::new(manifest_dir)
             .join("dist/marketplace/plugins/speq-skill/.claude-plugin/plugin.json");
         let plugin_json: serde_json::Value = serde_json::from_str(
@@ -137,6 +184,28 @@ mod codex_config {
     }
 
     #[test]
+    fn mcp_codex_json_starts_serena_by_command() {
+        let content = read_mcp_template("mcp-codex.json");
+        let v: serde_json::Value =
+            serde_json::from_str(&content).expect("mcp-codex.json must be valid JSON");
+
+        assert_eq!(v["serena"]["command"], "serena");
+        assert_eq!(
+            v["serena"]["args"],
+            serde_json::json!(["start-mcp-server", "--project-from-cwd", "--context=codex"])
+        );
+
+        assert!(
+            !content.contains("uvx"),
+            "mcp-codex.json must not reference uvx"
+        );
+        assert!(
+            !content.contains("git+https://github.com/oraios/serena"),
+            "mcp-codex.json must not fetch serena from git"
+        );
+    }
+
+    #[test]
     fn mcp_codex_json_uses_flat_format() {
         let content = read_mcp_template("mcp-codex.json");
         let v: serde_json::Value =
@@ -152,6 +221,55 @@ mod codex_config {
         assert!(
             v.get("context7").is_some(),
             "mcp-codex.json must declare context7 server"
+        );
+    }
+}
+
+// `install.sh` and `scripts/local-install.sh` legitimately still reference the
+// literal string `uvx` once each: to *detect* a stale, git-sourced Codex
+// registration (`command: uvx`) left over from before this change, so it can
+// be replaced with the by-command form. What must never reappear in either
+// script is the old invocation itself (`-- uvx --from ...`) or the git URL —
+// those would mean the installer still launches Serena that way.
+const LEGACY_INVOCATION: &str = "-- uvx --from";
+const LEGACY_GIT_SOURCE: &str = "git+https://github.com/oraios/serena";
+
+#[test]
+fn installer_files_have_no_git_sourced_serena() {
+    let manifest_dir = env!("CARGO_MANIFEST_DIR");
+    let scripts_detecting_legacy_uvx = ["install.sh", "scripts/local-install.sh"];
+    let files_banning_uvx_outright = [
+        "scripts/plugin/mcp.json",
+        "scripts/plugin/mcp-codex.json",
+        "docs/installation.md",
+        "docs/mcp-servers.md",
+        "README.md",
+    ];
+
+    for file in scripts_detecting_legacy_uvx {
+        let path = Path::new(manifest_dir).join(file);
+        let content =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to read {file}: {e}"));
+
+        assert!(
+            !content.contains(LEGACY_INVOCATION),
+            "{file} must not invoke serena via the legacy `uvx --from` form"
+        );
+        assert!(
+            !content.contains(LEGACY_GIT_SOURCE),
+            "{file} must not fetch serena from git"
+        );
+    }
+
+    for file in files_banning_uvx_outright {
+        let path = Path::new(manifest_dir).join(file);
+        let content =
+            fs::read_to_string(&path).unwrap_or_else(|e| panic!("failed to read {file}: {e}"));
+
+        assert!(!content.contains("uvx"), "{file} must not reference uvx");
+        assert!(
+            !content.contains(LEGACY_GIT_SOURCE),
+            "{file} must not fetch serena from git"
         );
     }
 }
