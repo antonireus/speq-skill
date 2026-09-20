@@ -15,8 +15,10 @@ Detection recipes, thresholds, and remediation procedures for each `speq-audit` 
 - [10. Git hygiene](#10-git-hygiene)
 - [11. Active-plan validity](#11-active-plan-validity)
 - [12. Project hooks](#12-project-hooks)
+- [13. ADR noise](#13-adr-noise)
 - [Remediation: decision-log migration](#remediation-decision-log-migration)
 - [Remediation: domain/feature restructure](#remediation-domainfeature-restructure)
+- [Remediation: ADR noise removal](#remediation-adr-noise-removal)
 
 Reserved top-level names under `specs/` (NOT domains): `_plans/`, `_recorded/`, `_decision/`, `mission.md`, `.gitignore`.
 
@@ -76,6 +78,12 @@ Delegated to `audit-agent` (see SKILL.md Phase 3). The agent returns (a) library
 **Detect:** list any `.speq/*-hook.md` files present in the repo root.
 **Signal:** informational only, no `✓`/`✗`/`⚠`: `N hooks active: <filenames>` or `none`. Never a finding, never remediated. It only surfaces that custom behavior is in effect.
 
+## 13. ADR noise
+Delegated to `adr-audit-agent` (see SKILL.md Phase 3b). The agent reads every `specs/_decision/*.md` fragment and returns one verdict per ADR: `KEEP`, `NOISE-PROCESS`, `NOISE-LOCAL`, `NOISE-COROLLARY`, `NOISE-DUPLICATE`, `STALE`, or `UNSURE`. The agent file defines the tags and the promotion gate they apply.
+**Detect:** skip (`— n/a`) when `specs/_decision/` holds no fragment, or when the old `specs/decision-log.md` exists (migrate first).
+**Signal:** `✓ N ADRs, no noise`, `⚠ M of N noise · S stale · U unsure`, or `— n/a`.
+**Remediate (on Yes, `NOISE-*` only):** [ADR noise removal](#remediation-adr-noise-removal). `STALE` and `UNSURE` are report-only: the user edits the ADR or plans a change.
+
 ---
 
 ## Remediation: decision-log migration
@@ -94,3 +102,11 @@ Highest-risk fix. Never auto-run.
 2. Show the full `mv` list and confirm with `AskUserQuestion`.
 3. On Yes, spawn a worker to `mkdir -p` the targets and `mv` each `spec.md` (and sibling files) into place.
 4. Validate: `speq feature validate` — MUST pass. If it fails, stop and report; do not guess.
+
+## Remediation: ADR noise removal
+Removal loses a decision if the verdict is wrong. Show the full verdict list first. The user can strike slugs from it. Delegate the rest to a spawned worker (Yes required). For each confirmed `NOISE-*` ADR:
+1. `NOISE-COROLLARY`: add the ADR's decision as one sentence to the `### Consequences` of its `Parent` ADR. Create the section when the parent is short form. Add no dates.
+2. Delete the ADR block from its fragment: from its `## ADR:` heading up to the next `## ADR:` heading or the end of the file.
+3. When a fragment has no ADR block left, delete the fragment file. Leave the `NNN-` prefixes of the other fragments unchanged.
+4. Validate: `speq decision-log validate` MUST pass. If it fails, undo this step's edits, report the validator message, and stop. Do not guess.
+5. Report each removed slug and the fold target of each corollary. Do not commit: the user reviews the diff.

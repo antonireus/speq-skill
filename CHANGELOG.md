@@ -5,6 +5,7 @@
 - Serena now starts via a `serena` command installed once with `uv tool install -p 3.13 serena-agent`, instead of a per-start `uvx` fetch from its git repository. The installer provisions the tool (optional, non-fatal if `uv` is absent) and replaces a stale git-sourced Codex registration on re-run. Closes #17
 - `Promotes to ADR: yes` now requires a behavior, architecture, or design change; a workflow or procedural decision defaults to `no` unless it sets a binding project-wide convention. A minor decision now records as a short-form ADR (no `Options Considered`/`Consequences`). `plan-reviewer` gains `[IMPLEMENTATION_LEAKAGE]` (a spec Background states a fact no scenario depends on) and `[ADR_OVERPROMOTION]` (an entry fails the new gate). Closes #18
 - Folded `specs/_decision/001-*.md`, `003-*.md`, and `005-*.md` from 19 ADRs down to 10 under the new gate, correcting a stale fact along the way (the embedding model installs from HuggingFace, not GitHub release assets)
+- `/speq:audit` gains an ADR noise check. The new `adr-audit-agent` (`fable`/`high`, `gpt-5.5` on Codex) reads every ADR under `specs/_decision/`, tags each `KEEP`, `NOISE-*`, `STALE`, or `UNSURE` against the promotion gate, and checks each remaining ADR's claims against the code. After a Yes, the orchestrator folds corollaries into their parent, removes the noise ADRs, and re-runs `speq decision-log validate`. `STALE` and `UNSURE` ADRs are report-only
 
 ## 0.21.0
 

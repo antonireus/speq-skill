@@ -185,9 +185,9 @@ Health-check a speq project in one read-only pass, then fix each finding after i
 - To inherit or clone a speq project, and to check its state
 - To check for spec-library drift on a regular basis
 
-**Checks:** spec-library `<domain>/<feature>` structure, `speq feature validate`, decision-log format and validity, sync between `mission.md` and the spec library (delegated to `audit-agent`), unrecorded plans in `_plans/`, gitignore hygiene (`_recorded` ignored, `_decision` and `_plans` tracked), recorded-folder naming, library thresholds, and git hygiene.
+**Checks:** spec-library `<domain>/<feature>` structure, `speq feature validate`, decision-log format and validity, ADR noise and accuracy (delegated to `adr-audit-agent`), sync between `mission.md` and the spec library (delegated to `audit-agent`), unrecorded plans in `_plans/`, gitignore hygiene (`_recorded` ignored, `_decision` and `_plans` tracked), recorded-folder naming, library thresholds, and git hygiene.
 
-**Output:** a BLUF summary — a verdict, a `✓/✗/⚠` checks table, and numbered remediations. Structural fixes (migrate an old `decision-log.md`, restructure domains) and the `/speq:mission` handoff for mission drift run only after you confirm.
+**Output:** a BLUF summary — a verdict, a `✓/✗/⚠` checks table, and numbered remediations. Structural fixes (migrate an old `decision-log.md`, restructure domains), the removal of noise ADRs, and the `/speq:mission` handoff for mission drift run only after you confirm.
 
 ---
 
