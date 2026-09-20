@@ -64,6 +64,8 @@ A `DELTA:CHANGED` block on `## Background` or `# Feature: <name>` replaces the w
 
 Use this when a scenario change makes the current Background prose inaccurate. Copy the section's current content in full, then edit it — per Deletion Semantics above, anything left out is gone from the permanent spec.
 
+A delta file whose only blocks are `## Background` or `# Feature` MUST also include one scenario copied verbatim from the target spec, outside any delta marker: `speq plan validate` rejects a delta file with no scenarios, and `speq record` ignores unmarked content, so the unmarked scenario satisfies validation without itself being merged as a change.
+
 ```markdown
 # Feature: CLI Record
 

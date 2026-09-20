@@ -23,7 +23,7 @@ Store one committed ADR fragment per plan at `specs/_decision/NNN-<plan-name>.md
 
 ### Consequences
 
-Parallel plans write disjoint files, so git never contends on the text. Reading the full decision history requires assembling fragments rather than reading one file.
+Parallel plans write disjoint files, so git never contends on the text. Reading the full decision history requires assembling fragments rather than reading one file. `speq decision-log show` assembles the fragments to stdout and no merged file is committed. The `NNN-` prefix is a record-time count; two parallel plans can share one, and `show` orders by `(prefix, filename)` to stay deterministic.
 
 ## ADR: Stable slug identity replaces sequential ADR numbers
 
@@ -37,65 +37,4 @@ Sequential `ADR-NNN` numbering requires a single shared counter. Parallel plans 
 
 ### Decision
 
-Identify each ADR by an explicit kebab-case `**ID:**` slug, unique across all fragments. `Supersedes:` and `Status: Superseded by <slug>` reference slugs instead of numbers. Delete the sequential-number validator.
-
-### Options Considered
-
-| Option | Verdict |
-|--------|---------|
-| Kebab-case slug identity | ✓ Chosen — slugs are stable identifiers that survive independent, out-of-order promotion |
-| Keep `ADR-NNN` numbering | ✗ Rejected — numbers force renumbering and global coordination across parallel plans |
-
-### Consequences
-
-Cross-references survive independent promotion without renumbering. Slug uniqueness must be validated across the full `specs/_decision` directory.
-
-## ADR: Render the aggregate log on demand
-
-**ID:** render-decision-log-on-demand
-**Plan:** avoid-decision-log-conflicts
-**Status:** Accepted
-
-### Context
-
-A committed, merged view of all ADRs (such as a regenerated `specs/decision-log.md`) is itself a shared artifact that parallel plans would contend over when writing back to it.
-
-### Decision
-
-Add `speq decision-log show` to assemble and print the full log to stdout on demand. The command never writes a merged file to disk.
-
-### Options Considered
-
-| Option | Verdict |
-|--------|---------|
-| Render on demand via `speq decision-log show` | ✓ Chosen — a rendered view has no artifact to contend over |
-| Regenerate a committed `specs/decision-log.md` after each record | ✗ Rejected — any committed aggregate reintroduces the shared-file conflict |
-
-### Consequences
-
-Readers run a command instead of opening a file. No merged artifact exists to diff or conflict on.
-
-## ADR: Duplicate NNN- prefixes across fragments are acceptable
-
-**ID:** duplicate-fragment-prefixes-acceptable
-**Plan:** avoid-decision-log-conflicts
-**Status:** Accepted
-
-### Context
-
-Assigning a globally unique `NNN-` prefix at record time requires parallel plans to serialize on a shared counter, which reintroduces coordination even after fragment files remove the text conflict.
-
-### Decision
-
-Assign the `NNN-` prefix by counting existing entries at record time and tolerate duplicate prefixes across parallel plans. No renumber or serialization machinery.
-
-### Options Considered
-
-| Option | Verdict |
-|--------|---------|
-| Duplicate prefixes allowed, no serialization | ✓ Chosen — slugs already disambiguate identity, so a prefix tie is only cosmetic |
-| Serialize numbers at record time to guarantee uniqueness | ✗ Rejected — reintroduces coordination and offers no identity benefit |
-
-### Consequences
-
-Two fragments may share an `NNN-` prefix. `speq decision-log show` orders fragments by `(prefix, filename)` to keep output deterministic despite the tie.
+Identify each ADR by an explicit kebab-case `**ID:**` slug, unique across all fragments, rejecting sequential `ADR-NNN` numbering because it forces renumbering and global coordination across parallel plans. `Supersedes:` and `Status: Superseded by <slug>` reference slugs instead of numbers. Delete the sequential-number validator. Cross-references survive independent promotion without renumbering.

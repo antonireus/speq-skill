@@ -72,8 +72,9 @@ For each entry where `Promotes to ADR: yes`:
    - **Supersedes** (optional) — if the entry names an earlier decision it replaces, set this to that decision's existing ADR slug
    - **Context** — synthesized from the entry's Rationale + Alternatives
    - **Decision** — from the entry's Decision bullet
-   - **Options Considered** — from the entry's Alternatives bullet
-   - **Consequences** — brief inference from Rationale
+   - **Options Considered** — emit this section ONLY when the entry's Alternatives names a real rejected option (not `none`, not empty). Never infer it from prose elsewhere in the entry
+   - **Consequences** — emit this section ONLY from the entry's own Consequences line, when present. Never infer it from Rationale or any other field
+   - When the entry carries neither (Alternatives is empty/`none` and there is no Consequences line), the assembled ADR is short-form: field block + `### Context` + `### Decision` only — no `### Options Considered`, no `### Consequences`
 
 2. Write ONE new fragment file `specs/_decision/NNN-<plan-name>.md`:
    - NNN = (count of existing files in `specs/_decision/`) + 1, zero-padded to 3 digits
@@ -104,3 +105,4 @@ If a threshold is exceeded, return BEFORE archiving and ask the orchestrator to 
 | `DELTA:CHANGED` or `DELTA:REMOVED` naming a scenario absent from the target spec | Rejected — `record` errors instead of silently merging nothing |
 | Heading left outside the marker, so the block's first line is not a recognized anchor | Rejected — `record` cannot tell what the block targets |
 | Two delta blocks of one file sharing an anchor, whatever their marker kinds | Rejected — the merged result would depend on block order; write one block carrying the final text |
+| Filling an optional ADR section the entry does not carry | Rejected — `### Options Considered` and `### Consequences` are emitted only from the entry's own Alternatives/Consequences fields, never inferred from prose |

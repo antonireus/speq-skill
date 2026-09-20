@@ -32,20 +32,11 @@ No ONNX Runtime library is required at build time or runtime. `cargo install spe
 
 ### Context
 
-Having decided on a pure-Rust inference path (`pure-rust-inference`), two sub-variants were evaluated: a pure-Rust ONNX runtime (`tract`, keeping the existing `.onnx` model file) and a native Rust BERT encoder (`candle`, storing the model as `safetensors`). The embedding model `Snowflake/snowflake-arctic-embed-xs` is architecturally `all-MiniLM-L6-v2`, a standard 6-layer BERT encoder — fully expressible natively in Rust.
+Having decided on a pure-Rust inference path (`pure-rust-inference`), two sub-variants were evaluated for the embedding model `Snowflake/snowflake-arctic-embed-xs`, architecturally an `all-MiniLM-L6-v2` BERT encoder: a pure-Rust ONNX runtime (`tract`, keeping the existing `.onnx` file) and a native Rust BERT encoder (`candle`, storing the model as `safetensors`). Both were viable ways to run this standard 6-layer encoder without ONNX Runtime.
 
 ### Decision
 
-Implement inference with `candle-core` + `candle-nn` + `candle-transformers` (`models::bert::BertModel`) plus the `tokenizers` crate. Store the model as `model.safetensors` + `tokenizer.json` + `config.json`.
-
-### Options Considered
-
-- **Option B1 (`tract` pure-Rust ONNX):** Keeps the existing `.onnx` file but transformer-operator coverage in `tract` is uneven; ONNX graphs often need massaging; still requires a separate tokenizer crate. Higher integration risk with no advantage over B2.
-- **Option B2 (`candle` native BERT) — chosen:** `candle-transformers` ships a maintained native `BertModel`; HuggingFace's own candle examples compute `all-MiniLM-L6-v2` sentence embeddings. `safetensors` is memory-mappable and has no code-execution surface. All new crates are Apache-2.0/MIT, compatible with this MIT project.
-
-### Consequences
-
-Inference is performed by `src/embedding.rs` (`Embedder` type) using `candle` on the CPU device. The model is loaded from `$SPEQ_CACHE/speq/models/` as three files. The `.onnx` model file is no longer used. Embedding dimensionality (384, L2-normalized) and the `.idx` index format are unchanged.
+Implement inference with `candle-core` + `candle-nn` + `candle-transformers` (`models::bert::BertModel`) plus the `tokenizers` crate, storing the model as `model.safetensors` + `tokenizer.json` + `config.json`, rejecting `tract` pure-Rust ONNX (Option B1) for its uneven ONNX operator coverage and higher integration risk.
 
 ## ADR: Move model acquisition out of the binary into the installer
 
@@ -59,7 +50,7 @@ The previous `fastembed`/`ort` path downloaded the model on first run via `hf-hu
 
 ### Decision
 
-The `speq` binary contains no model-download code. It only reads model files from `$SPEQ_CACHE/speq/models/`. `install.sh` (and the future Homebrew formula) provision the three model files at install time by downloading them from the GitHub release assets that match the installed version.
+The `speq` binary contains no model-download code. It only reads model files from `$SPEQ_CACHE/speq/models/`. `install.sh` (and the future Homebrew formula) provision `model.onnx` and `tokenizer.json` from HuggingFace at install time (per `tract-onnx-inference`).
 
 ### Options Considered
 
@@ -69,28 +60,4 @@ The `speq` binary contains no model-download code. It only reads model files fro
 
 ### Consequences
 
-`speq search` exits with an actionable error (naming the cache directory and provisioning instruction) when model files are absent. The installer must be run (or the model provisioned manually) before search works. Publishing model files as GitHub release assets is required; task 5.3 (release asset publishing) is deferred to when binary distribution ships.
-
-## ADR: Snowflake/snowflake-arctic-embed-xs model weights are Apache 2.0 — redistribute with attribution
-
-**ID:** model-weights-apache-2-license
-**Plan:** refactor-search-pure-rust-inference
-**Status:** Accepted
-
-### Context
-
-Shipping `model.safetensors`, `tokenizer.json`, and `config.json` as release assets requires verifying the model's license is compatible with this MIT project and that redistribution obligations are met. `cargo deny check` audits Rust crate licenses only; model file compliance is a separate concern. Verification was performed on 2026-05-22.
-
-### Decision
-
-Ship the model weights as release assets. Include the model's Apache 2.0 `LICENSE` file (and `NOTICE` if present) alongside `THIRD_PARTY_LICENSES` in the marketplace archive and the Homebrew formula. `cargo deny` does not cover model files; model license compliance is verified as a separate manual/CI step in the release script (task 5.3).
-
-### Options Considered
-
-- **Do not redistribute model weights:** Require users to download from HuggingFace directly. Eliminates redistribution obligations but breaks the offline-install goal.
-- **Redistribute without license file:** Non-compliant with Apache 2.0 attribution requirement.
-- **Redistribute with attribution — chosen:** Apache 2.0 ↔ MIT is fully compatible (both permissive, no copyleft, no non-commercial clause). Attribution is satisfied by preserving the copyright notice and `NOTICE` file.
-
-### Consequences
-
-The release script (task 5.3) must bundle the model's Apache 2.0 `LICENSE` (and `NOTICE` if present) in the archive. `cargo deny check` passes because it sees only Rust crate licenses. A separate CI step or checklist item covers model file license compliance. `sentence-transformers/all-MiniLM-L6-v2` (base model, Apache 2.0) and `Snowflake/snowflake-arctic-embed-xs` (fine-tune, Apache 2.0) training data datasets are all permissively licensed.
+The model is Apache 2.0 (verified 2026-05-22). The installer downloads it from HuggingFace, so no release archive redistributes it. `THIRD_PARTY_LICENSES` attributes it in a Downloaded Assets section (`about.hbs`). `cargo deny` does not cover model files.

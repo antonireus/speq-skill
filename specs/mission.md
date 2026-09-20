@@ -124,4 +124,4 @@ Data flows from CLI arguments → module handlers → formatted output.
 
 | Service | Purpose | Failure Impact |
 |---------|---------|----------------|
-| HuggingFace (model download) | The installer downloads `snowflake-arctic-embed-xs` model files (`model.onnx`, `tokenizer.json`) once into the local cache (`~/.cache/speq/models/` or `$SPEQ_CACHE_DIR/models/`). Inference runs fully offline after that. | Search is unavailable until the model is provisioned. The binary reports a clear error naming the missing files and the cache directory. |
+| HuggingFace (model download) | The installer downloads the embedding model files once into the local cache. Inference runs fully offline after that. | Search is unavailable until the model is provisioned. The binary reports a clear error naming the missing files and the cache directory. |

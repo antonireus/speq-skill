@@ -4,7 +4,12 @@
 STRUCTURAL TEMPLATE - DO NOT COPY-PASTE
 Generate actual content from the clarifying interview and plan design.
 Capture interview Q&A verbatim or close paraphrase.
-Mark each decision entry with "Promotes to ADR: yes" if it is a significant architectural or workflow decision that belongs in the permanent record.
+Promotion gate: mark "Promotes to ADR: yes" only for a change in behavior, architecture, or design.
+Procedural and workflow decisions default to "no". The only override is a project-wide process
+convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a
+corollary of another decision — state the override explicitly in Rationale when you invoke it.
+A corollary of an already-promoted decision is not its own entry: add it as a bullet in that
+parent entry's Consequences line instead.
 -->
 
 ## Interview
@@ -21,15 +26,17 @@ Mark each decision entry with "Promotes to ADR: yes" if it is a significant arch
 ### [1] <Short decision title>
 
 - **Decision:** What was chosen.
-- **Alternatives:** What else was considered and why rejected.
+- **Alternatives:** What else was considered and why rejected. May read `none`.
 - **Rationale:** Why this choice.
+- **Consequences:** Effects, trade-offs, or corollary decisions folded in here. Omit this line entirely when there are none. <!-- optional -->
 - **Promotes to ADR:** yes
 
 ### [2] <Short decision title>
 
 - **Decision:** What was chosen.
-- **Alternatives:** What else was considered and why rejected.
+- **Alternatives:** What else was considered and why rejected. May read `none`.
 - **Rationale:** Why this choice.
+- **Consequences:** Effects, trade-offs, or corollary decisions folded in here. Omit this line entirely when there are none. <!-- optional -->
 - **Promotes to ADR:** no
 
 ## Review Findings

@@ -1,15 +1,11 @@
 # Feature: Embedding Model Provisioning
 
-Ensures the semantic-search embedding model is placed into the speq model cache during installation, so the first `speq search` invocation works offline with no network access or download machinery in the binary.
+Ensures the semantic-search embedding model is placed into the speq model cache during installation, so the first `speq search` invocation works offline with no network access.
 
 ## Background
 
-* The embedding model identity is `Snowflake/snowflake-arctic-embed-xs`
-* The model cache directory is `$XDG_CACHE_HOME/speq/models/` (falling back to the platform cache directory, or `.cache/speq/models/` when no writable system cache exists), matching the path the `speq` binary reads at search time
 * The model is distributed as two files: model weights (`model.onnx`) and a tokenizer definition (`tokenizer.json`); the ONNX graph embeds the model configuration, so no separate config file is provisioned
-* Model files are hosted as release assets on the speq-skill GitHub release that matches the installed version; `model.onnx` is located under the `onnx/` path segment on HuggingFace
 * Provisioning is idempotent: if the model files already exist in the cache, the installer SHALL NOT re-download them
-* The `speq` binary itself contains no model-download code; provisioning is performed exclusively by the installer
 
 ## Scenarios
 

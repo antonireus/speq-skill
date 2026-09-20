@@ -4,7 +4,7 @@
 
 ## Background
 
-<Invariant conditions that apply to all scenarios>
+<Forbidden = any Background fact that no scenario's GIVEN/WHEN/THEN step in the same spec depends on. For a delta on an existing feature, the scenarios are those of the target spec after the delta merges. For a NEW feature, they are the delta file's own scenarios. A Background line that only restates a THEN step is dropped as redundant. The same rule applies to the `# Feature: <name>` description placeholder above.>
 
 ## Scenarios
 

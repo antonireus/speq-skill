@@ -23,6 +23,10 @@ There are two distinct formats:
 
 `planner-agent` creates the plan-level decision log automatically during `/speq:plan`. The log records the interview questions and answers, and the design choices. It uses a conversational format.
 
+### Promotion gate
+
+`Promotes to ADR: yes` requires a change in behavior, architecture, or design. Procedural and workflow decisions default to `no`. The only override: a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision — the entry's Rationale must state the override explicitly. A corollary of an already-promoted decision is not its own entry: it is recorded as a bullet in that parent entry's `Consequences` line.
+
 ### Format
 
 ```markdown
@@ -38,8 +42,9 @@ There are two distinct formats:
 ### [N] <short title>
 
 - **Decision:** What was decided
-- **Alternatives:** What was considered and not chosen
+- **Alternatives:** What was considered and not chosen (may read `none`)
 - **Rationale:** Why this direction
+- **Consequences:** (optional) Effects, trade-offs, or corollary decisions folded in here — omitted when there are none
 - **Promotes to ADR:** yes / no
 
 ## Review Findings
@@ -111,6 +116,13 @@ What was decided.
 - `**Status:**` must be one of: `Accepted`, `Deprecated`, `Superseded by <slug>`.
 - `**Supersedes:**`, `### Options Considered`, and `### Consequences` are optional.
 - `recorder-agent` writes only the new fragment for the plan that it records. It never edits another fragment.
+
+#### Full form vs. short form
+
+`### Options Considered` and `### Consequences` each have an independent trigger: `recorder-agent` emits `### Options Considered` only when the plan-level entry's Alternatives names a real rejected option, and `### Consequences` only when the entry carries a Consequences line. It never infers either section from prose elsewhere in the entry.
+
+- **Full form**: both optional sections present — field block, `### Context`, `### Decision`, `### Options Considered`, `### Consequences`.
+- **Short form**: neither trigger fires (Alternatives is empty/`none` and there is no Consequences line) — the ADR is just the field block, `### Context`, and `### Decision`.
 - `recorder-agent` sets `**Supersedes:** <slug>` on the new ADR as a one-way forward pointer. A superseded ADR keeps `**Status:** Accepted`. The two-way form, `Status: Superseded by <slug>`, applies only to hand-authored or migrated entries.
 
 ### Validate vs. show
