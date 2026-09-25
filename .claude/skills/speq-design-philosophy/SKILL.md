@@ -5,7 +5,7 @@ description: Complexity-management design principles — deep modules, informati
 
 # Design Philosophy
 
-**A Philosophy of Software Design** (Ousterhout) complexity-management framework, extended with **Clean Architecture**'s (Martin) dependency rule.
+Complexity-management framework. Draws on J. Ousterhout's *A Philosophy of Software Design* and the dependency rule from R. Martin's *Clean Architecture*.
 
 ## Core Principle
 
@@ -75,4 +75,4 @@ If a change introduces a new module, interface, or boundary, answer every questi
 
 ## Attribution
 
-Concepts from John Ousterhout's *A Philosophy of Software Design* and Robert C. Martin's *Clean Architecture*, adapted here. Inspired by the `wondelai/skills` collection.
+Draws on established practice, including J. Ousterhout (*A Philosophy of Software Design*), R. Martin (*Clean Architecture*), and D. Parnas (information hiding). Inspired by the `wondelai/skills` collection.

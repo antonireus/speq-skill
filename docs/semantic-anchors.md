@@ -15,7 +15,7 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 | Anchor | Skill | Category |
 |--------|-------|----------|
 | Information Foraging | speq-cli | Search strategy |
-| Clean Code (Martin) | speq-code-guardrails | Code quality |
+| Clean Code | speq-code-guardrails | Code quality |
 | London School TDD | speq-code-guardrails | Testing |
 | SOLID | speq-code-guardrails | Design principles |
 | KISS | speq-code-guardrails | Design principles |

@@ -5,7 +5,7 @@ description: TDD cycle and code quality guardrails — failing-test-first, evide
 
 # Code Guardrails
 
-**Clean Code** (Martin) TDD workflow and quality guardrails.
+TDD workflow and quality guardrails. Draws on established practice, including work by R. Martin, K. Beck, B. Meyer, and Toyota's Five Whys.
 
 ## Golden Rule
 
@@ -114,4 +114,4 @@ Run ONLY the test you created/changed, not the full suite.
 
 ## Attribution
 
-Concepts from Robert C. Martin's *Clean Code: A Handbook of Agile Software Craftsmanship*, adapted here.
+Draws on established practice, including R. Martin (*Clean Code*, SOLID, Boy Scout Rule), K. Beck (TDD), and B. Meyer (Command-Query Separation).
