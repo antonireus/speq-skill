@@ -24,11 +24,8 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 | Law of Demeter | speq-code-guardrails | Design principles |
 | Boy Scout Rule | speq-code-guardrails | Code quality |
 | Five Whys | speq-code-guardrails | Root cause analysis |
-| Feynman Technique | speq-code-tools | Comprehension |
-| Evidence Hierarchy | speq-ext-research | Research |
 | Conventional Commits | speq-git-discipline | Version control |
 | Work Breakdown Structure | speq-implement | Task decomposition |
-| Pyramid Principle | speq-implement | Communication |
 | BLUF (Bottom Line Up Front) | speq-implement | Reporting |
 | Socratic Method | speq-mission | Interview |
 | User Story Mapping (Patton) | speq-mission | Requirements |
@@ -43,14 +40,6 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 | Devil's Advocate (diabolus advocatus) | plan-reviewer (agent) | Adversarial review |
 | BLUF (Bottom Line Up Front) | speq-audit | Reporting |
 | London School TDD | speq-implement (template) | Testing |
-| BLUF / Inverted Pyramid | speq-writing-guardrails | Structure |
-| NN/g F-Pattern | speq-writing-guardrails | Readability |
-| Anthropic context-engineering | speq-writing-guardrails | Agent readability |
-| Strunk & White | speq-writing-guardrails | Concision |
-| Zinsser | speq-writing-guardrails | Concision |
-| INCOSE GtWR | speq-writing-guardrails | Requirements clarity |
-| ISO/IEC/IEEE 29148 | speq-writing-guardrails | Requirements clarity |
-| RFC 2119 / 8174 | speq-writing-guardrails | Prose register |
 | A Philosophy of Software Design (Ousterhout) | speq-design-philosophy | Design principles |
 | Deep Modules | speq-design-philosophy | Design principles |
 | Information Hiding | speq-design-philosophy | Design principles |
@@ -58,4 +47,3 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 | Dependency Rule (Clean Architecture / Martin) | speq-design-philosophy | Design principles |
 | Rule of Three | speq-code-guardrails | Design principles |
 | Command-Query Separation | speq-code-guardrails | Design principles |
-| F.I.R.S.T. | speq-code-guardrails | Testing |

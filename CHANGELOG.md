@@ -6,6 +6,7 @@
 - `Promotes to ADR: yes` now requires a behavior, architecture, or design change; a workflow or procedural decision defaults to `no` unless it sets a binding project-wide convention. A minor decision now records as a short-form ADR (no `Options Considered`/`Consequences`). `plan-reviewer` gains `[IMPLEMENTATION_LEAKAGE]` (a spec Background states a fact no scenario depends on) and `[ADR_OVERPROMOTION]` (an entry fails the new gate). Closes #18
 - Folded `specs/_decision/001-*.md`, `003-*.md`, and `005-*.md` from 19 ADRs down to 10 under the new gate, correcting a stale fact along the way (the embedding model installs from HuggingFace, not GitHub release assets)
 - `/speq:audit` gains an ADR noise check. The new `adr-audit-agent` (`fable`/`high`, `gpt-5.5` on Codex) reads every ADR under `specs/_decision/`, tags each `KEEP`, `NOISE-*`, `STALE`, or `UNSURE` against the promotion gate, and checks each remaining ADR's claims against the code. After a Yes, the orchestrator folds corollaries into their parent, removes the noise ADRs, and re-runs `speq decision-log validate`. `STALE` and `UNSURE` ADRs are report-only
+- Nine writing rules
 
 ## 0.21.0
 
@@ -56,7 +57,6 @@
 - `speq:plan-pr` includes `## Impact` verbatim in the draft PR body and prints it in the orchestrator report
 - `speq:plan-pr` posts a PR comment for ADVISORY findings and Design Decisions entries when either is non-empty
 - `speq:implement-pr` posts a condensed verification-summary PR comment (Verdict table + Notes) after commit/push, alongside the full report committed to the branch
-- `speq-writing-guardrails` extends governed scope to these new PR comments and requires the `writing:*` skills (clarity, evidence, QA checklist) for newly-composed PR-facing content
 
 ## 0.13.3
 
@@ -104,7 +104,7 @@
 
 ## 0.9.0
 
-- Add `speq:writing-guardrails`: prose guardrails (BLUF, Strunk & White, INCOSE GtWR, ISO 29148, RFC 2119) for speq artifacts and pipeline-composed GitHub PRs/issues/comments
+- Add `speq:writing-guardrails`: prose guardrails for speq artifacts and pipeline-composed GitHub PRs/issues/comments
 - Load it into every prose-authoring component: planner-agent, recorder-agent (ADR step), speq-implement, speq-mission, speq-plan-pr, speq-implement-pr
 - Add a "Prose style" pointer to the plan/feature/mission/verification/decision-log templates
 
