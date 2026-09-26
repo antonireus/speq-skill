@@ -45,7 +45,7 @@ The installer also:
 - When Codex is installed, registers Serena and Context7 via `codex mcp add`
 - Installs Codex skills into `$CODEX_HOME/skills` so Codex can load the `$`-triggered `speq:*` skills
 - Installs plugin MCP configuration for Serena and Context7
-- Downloads the `snowflake-arctic-embed-xs` embeddings model (~23 MB) into `~/.cache/speq/models/`
+- Downloads the [snowflake-arctic-embed-xs](https://huggingface.co/Snowflake/snowflake-arctic-embed-xs) embeddings model into `~/.cache/speq/models/`
 
 ## Install from source
 
@@ -220,7 +220,7 @@ The plugin depends on the Serena and Context7 MCP servers. If you see connection
 |------------|---------|---------|
 | [Serena](https://github.com/oraios/serena) | Semantic code navigation | MIT |
 | [Context7](https://github.com/upstash/context7) | Library documentation | MIT |
-| [snowflake-arctic-embed-xs](https://huggingface.co/Snowflake/snowflake-arctic-embed-xs) | Embeddings model (~23MB) | Apache 2.0 |
+| [snowflake-arctic-embed-xs](https://huggingface.co/Snowflake/snowflake-arctic-embed-xs) | Embeddings model (~86MB) | Apache 2.0 |
 
 > [!NOTE]
 > The installer downloads the embeddings model into `~/.cache/speq/models/` during installation.

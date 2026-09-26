@@ -163,11 +163,11 @@ echo ""
 echo "=== THIRD_PARTY_LICENSES preview (first 30 lines) ==="
 head -30 "$EXTRACT_DIR/bin/THIRD_PARTY_LICENSES"
 
-# 10. Check for required licenses (candle and tokenizers are Apache-2.0)
+# 10. Check for required licenses
 echo ""
 echo "=== Checking for required licenses ==="
 if grep -q "Apache" "$EXTRACT_DIR/bin/THIRD_PARTY_LICENSES"; then
-    echo "OK Apache license found (required for candle and tokenizers)"
+    echo "OK Apache license found"
 else
     echo "ERROR: Apache license NOT found"
     exit 1
