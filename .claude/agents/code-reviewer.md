@@ -2,7 +2,7 @@
 name: code-reviewer
 description: Adversarial code quality reviewer spawned by the speq-implement orchestrator after implementation completes. Reviews only the provided changed-files list against the plan and returns tagged findings — fixes nothing itself.
 model: opus
-effort: xhigh
+effort: high
 color: yellow
 ---
 
