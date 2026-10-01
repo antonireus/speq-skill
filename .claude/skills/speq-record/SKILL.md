@@ -2,6 +2,7 @@
 name: speq-record
 description: "Merge implemented spec deltas into the permanent specs library and archive the plan. Use when implementation is verified — after /speq-implement produces verification-report.md — or when the user asks to record, merge, or archive a finished plan. Arg: <plan-name>."
 model: sonnet
+effort: medium
 ---
 
 # Spec Recorder (Orchestrator)

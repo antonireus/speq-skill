@@ -20,13 +20,13 @@ Workflow skills coordinate the work. They gather context, ask clarifying questio
 
 | Skill or agent | Model | Effort | Notes |
 |----------------|-------|--------|-------|
-| `/speq:plan` | `sonnet` | inherited | Thin orchestration |
-| `/speq:implement` | `sonnet` | inherited | Thin orchestration |
-| `/speq:record` | `sonnet` | inherited | Thin orchestration |
+| `/speq:plan` | `sonnet` | `medium` | Thin orchestration |
+| `/speq:implement` | `sonnet` | `medium` | Thin orchestration |
+| `/speq:record` | `sonnet` | `medium` | Thin orchestration |
 | `/speq:mission` | inherited | inherited | Interactive bootstrap |
-| `/speq:plan-pr` | `sonnet` | inherited | Thin orchestration (headless) |
-| `/speq:implement-pr` | `sonnet` | inherited | Thin orchestration (headless) |
-| `/speq:audit` | `sonnet` | inherited | Thin orchestration (health check) |
+| `/speq:plan-pr` | `sonnet` | `medium` | Thin orchestration (headless) |
+| `/speq:implement-pr` | `sonnet` | `medium` | Thin orchestration (headless) |
+| `/speq:audit` | `sonnet` | `medium` | Thin orchestration (health check) |
 | Utility skills | inherited | inherited | Reference material for the caller |
 | `planner-agent` | `opus` | `xhigh` | Spec deltas, ADRs, task decomposition |
 | `plan-reviewer` | `opus` | `xhigh` | Adversarial plan review |

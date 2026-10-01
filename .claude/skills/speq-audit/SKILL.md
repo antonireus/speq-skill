@@ -2,6 +2,7 @@
 name: speq-audit
 description: Audit a speq project's health — spec-library structure, feature/decision-log/plan validation, ADR noise, mission-to-spec sync, unrecorded plans, and gitignore hygiene — then guide fixes. Use when the user asks to audit, health-check, doctor, lint, or sanity-check the specs or repo, or after cloning or inheriting a speq project.
 model: sonnet
+effort: medium
 ---
 
 # Spec Auditor (Orchestrator)
