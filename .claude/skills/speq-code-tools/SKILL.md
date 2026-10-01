@@ -14,12 +14,10 @@ Semantic code navigation and editing via Serena MCP. Tools are called `mcp__plug
 
 ## Tool Preference
 
-You MUST use these instead of the generic alternative — do not fall back to `Read`/`Grep`/`Edit`/`ls`/`find` for anything this table covers.
+Use these instead of the generic alternative for anything this table covers. For listing directories and finding files by name, use the harness's own file tools.
 
 | Task | Use | Not |
 |------|-----|-----|
-| List directory | `list_dir` | `ls`, `find` |
-| Find files | `find_file` | `find`, `rg --files` |
 | File symbols | `get_symbols_overview` | `rg "class\|function"` |
 | Symbol definition | `find_symbol` | `rg "function foo"` |
 | Symbol declaration | `find_declaration` | `rg` guesswork |
