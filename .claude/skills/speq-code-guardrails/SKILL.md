@@ -29,6 +29,10 @@ REFACTOR → Clean up, run test + lint, show output
 
 Run ONLY the test you created/changed, not the full suite.
 
+- RED fails for the expected reason: the behavior is missing, not a typo or syntax error.
+- A test that passes before any production change means an assumption is wrong. Check the assumption instead of keeping the test.
+- GREEN adds nothing the test does not require.
+
 ## Tests
 
 - Arrange, act, assert. One concept per test.

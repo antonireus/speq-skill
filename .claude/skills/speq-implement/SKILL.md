@@ -252,7 +252,6 @@ If context is lost or compacted:
 
 | File | Use When |
 |------|----------|
-| `references/tdd-cycle-checklist.md` | Sub-agent TDD reference |
 | `references/task-flow.md` | Task lifecycle management |
 | `references/verification-template.md` | Phase 6 report generation |
 
