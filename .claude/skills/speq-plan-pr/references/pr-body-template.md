@@ -35,6 +35,7 @@ Test plan
 - **`Current State` / `What Changes` replace a task-list dump.** State the problem, then the mechanism that fixes it. Never a step-by-step of what got implemented — that is `tasks.md`'s job, not the PR body's.
 - **`Impact` is plan.md's own `## Impact` section, trimmed**, not copied verbatim: keep only the bullets a user must weigh to approve. Omit the whole section when plan.md says "None".
 - **The `<details>` block is a pointer, never a second copy.** File names/paths only — `plan.md`, `decision-log.md`, `review/round-*.md`. If a fact matters enough to state, it belongs in `Current State`/`What Changes`/`Impact` above the fold, not buried here.
+- **Pointer targets must outlive the record.** A draft PR can name the files by path: the plan directory is on the branch. Once `/speq-implement-pr` records the plan, the directory leaves the branch (the archive is gitignored), so the ready PR links each file at the evidence commit, per that skill's C1.
 - **Test plan checklist stays inline, uncollapsed.** Checkboxes are the one thing a reviewer scans fastest as-is; folding them costs more than it saves.
 - **Blocked path (`flag-blocked`):** same skeleton. State the open question as its own line with a link to `open-questions.md`/`review/round-N.md` for the why — never paste the reviewer's `Issue`/`Fix` text into the body.
 
