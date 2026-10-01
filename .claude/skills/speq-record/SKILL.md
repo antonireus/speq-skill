@@ -53,7 +53,7 @@ Delegate to recorder-agent — Record <plan-name> into permanent specs
 - Delta specs: specs/_plans/<plan-name>/**/spec.md
 
 ## Your Task
-Merge all delta specs into permanent specs per the `recorder-agent` workflow. Validate between merges. Archive the plan on success. If any library threshold is exceeded (scenarios > 10, domain features > 8), STOP before archiving and return a question for the user.
+Record the plan into permanent specs per the `recorder-agent` workflow (`speq record` merges, validates, and archives). If any library threshold is exceeded (scenarios > 10, domain features > 8), STOP before archiving and return a question for the user.
 
 Project Hook: <if active, ".speq/record-hook.md — read it and apply it"; otherwise omit this line>
 

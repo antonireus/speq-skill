@@ -35,7 +35,7 @@ Every mark is orchestrator-written except `recorded`:
 | `implemented` | orchestrator | `/speq-implement` returned and `verification-report.md` is present | same |
 | `version-bumped` | orchestrator | version bump + build done | same |
 | `tested-green` | orchestrator | after the suites — `[x]` green, `[!]` red per the marker rule | same |
-| `recorded` | `recorder-agent` (`/speq-spec-merge` Finalize, right after the archive `mv`); the orchestrator verifies on `/speq-record` return and writes the mark if absent | archive step | `specs/_recorded/NNN-<plan-name>/tasks.md` |
+| `recorded` | `recorder-agent` (`/speq-spec-merge` Finalize, right after `speq record` archives the plan); the orchestrator verifies on `/speq-record` return and writes the mark if absent | archive step | `specs/_recorded/NNN-<plan-name>/tasks.md` |
 | `pr-ready` | orchestrator | `ship-ready` succeeded | `specs/_recorded/*-<plan-name>/tasks.md` |
 
 Pre-creation closes the existence gap: `tasks.md` normally appears only in `/speq-implement` Phase 2, but `resolved` must be checkpointed before that. Create the file with only the H1 and the `## PR Lifecycle` section. `/speq-implement` preserves the section verbatim and writes its `## Phase N` sections below it.
