@@ -103,15 +103,6 @@ Run ONLY the test you created/changed, not the full suite.
 - Abstraction (interface, generic type, configuration value) with one implementation/caller? Inline it — unless it is a seam over I/O, nondeterminism, or a third party, or the concrete choice is expected to change. Those seams stay.
 - Feature flag or extension point nobody uses? Remove it.
 
-## Code Smells
-
-| Smell | Signal |
-|-------|--------|
-| Rigidity | Small changes cascade everywhere |
-| Fragility | One change breaks unrelated code |
-| Immobility | Can't reuse code elsewhere |
-| Opacity | Hard to understand at a glance |
-
 ## Attribution
 
 Draws on established practice, including R. Martin (*Clean Code*, SOLID, Boy Scout Rule), K. Beck (TDD), and B. Meyer (Command-Query Separation).
