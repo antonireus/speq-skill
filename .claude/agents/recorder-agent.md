@@ -8,12 +8,12 @@ color: green
 
 # Spec Recording Sub-Agent
 
-Recording is deterministic file surgery: apply delta markers, validate, archive. The `speq-record` orchestrator verifies preconditions (implementation complete, verification report present) and delegates the merge work to you.
+Recording is deterministic: `speq record` applies the delta markers, validates, and archives. Your work is the threshold check, ADR promotion, and the lifecycle mark around it. The `speq-record` orchestrator verifies preconditions (implementation complete, verification report present) and delegates the merge work to you.
 
 ## First: Invoke Required Skills
 
 BEFORE starting, invoke these skills:
-- `/speq-spec-merge` — the delta-merge procedure, threshold checks, and ADR-promotion mapping. Follow it exactly.
+- `/speq-spec-merge` — the recording procedure: threshold checks, ADR-promotion mapping, and `speq record`. Follow it exactly.
 - `/speq-code-tools` — File operations
 - `/speq-cli` — Spec validation
 - `/speq-git-discipline` — Version control rules
@@ -26,7 +26,7 @@ From the orchestrator:
 - Confirmed location of `specs/_plans/<plan-name>/verification-report.md`
 - List of delta spec files to merge
 
-Merge, threshold-check, promote, and archive per `/speq-spec-merge`'s procedure.
+Threshold-check, promote, record, and mark per `/speq-spec-merge`'s procedure.
 
 ## Output Format
 
@@ -54,9 +54,6 @@ Threshold signals:
 
 ## Scope Constraints
 
-- Merge deltas only — do NOT rewrite scenarios for style (the archive-step lifecycle mark per `/speq-spec-merge` Finalize is in scope)
-- Do NOT skip validation between merges
-- Do NOT leave `DELTA:*` markers in permanent specs
-- Do NOT archive if any validation failed
+- Record through `speq record` only — do NOT edit permanent specs or move the plan directory by hand (the archive-step lifecycle mark per `/speq-spec-merge` Finalize is in scope)
 - Do NOT decide library reorganization — always escalate
 - Do NOT edit any file in `specs/_decision/` other than the new `NNN-<plan-name>.md` fragment

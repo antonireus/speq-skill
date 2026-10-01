@@ -1,6 +1,6 @@
 ---
 name: speq-spec-merge
-description: Delta-merge procedure — DELTA marker semantics, library-organization thresholds, and ADR-promotion field mapping. Triggered by recorder-agent.
+description: Recording procedure — library-threshold pre-check, ADR-promotion field mapping, and the `speq record` merge-and-archive step. Triggered by recorder-agent.
 ---
 
 # Spec Merge
@@ -14,49 +14,16 @@ List: specs/_plans/<plan-name>/**/spec.md
 
 Run `speq feature list` to see the current permanent spec library.
 
-## Apply Deltas
-
-For each delta spec at `specs/_plans/<plan-name>/<domain>/<feature>/spec.md`:
-
-```
-specs/<domain>/<feature>/spec.md exists?
-├─ No  → Copy delta (strip markers)
-└─ Yes → Merge using markers below
-```
-
-A delta block's anchor is the first non-empty line inside the block. `### Scenario: <name>` and `## Background` match exactly; `# Feature: <name>` matches by the prefix `# Feature`, so a description delta MAY rename the feature.
-
-**Scenario-anchor markers** (`### Scenario: <name>` wrapped in the marker):
-
-| Marker | Action |
-|--------|--------|
-| `DELTA:NEW` | Append scenario |
-| `DELTA:CHANGED` | Replace scenario with same name |
-| `DELTA:REMOVED` | Delete scenario with same name |
-
-**Prose-anchor markers** (`## Background` or `# Feature: <name>` wrapped in the marker):
-
-| Marker | Action |
-|--------|--------|
-| `DELTA:CHANGED` | Replace the whole section (heading plus body) in place. Any line the block omits is deleted from the permanent spec |
-| `DELTA:NEW` | Rejected — Background and the description are required sections that always exist |
-| `DELTA:REMOVED` | Rejected — removing a required section produces an invalid spec |
-
-After each merge:
-1. Strip all `<!-- DELTA:* -->` markers
-2. Validate: `speq feature validate <domain>/<feature>`
-3. If validation fails, stop and report. Do not guess fixes
-
 ## Check Library Thresholds
 
-After all merges:
+Before recording, compute each target's size after the merge. Scenarios per spec: the target spec's `### Scenario:` count, plus the plan's `DELTA:NEW` blocks, minus its `DELTA:REMOVED` blocks (a new feature counts its own scenarios). Features per domain: the domain's feature directories plus the plan's new features.
 
 | Metric | Threshold | Action |
 |--------|-----------|--------|
 | Scenarios per spec | >10 | Return to orchestrator for user decision |
 | Domain features | >8 | Return to orchestrator for user decision |
 
-**Never assume:** library reorganization is a user decision. Return a concrete question to the orchestrator.
+**Never assume:** library reorganization is a user decision. Return a concrete question to the orchestrator, and do not record.
 
 ## Promote ADRs to Permanent Decision Log
 
@@ -86,23 +53,19 @@ For each entry where `Promotes to ADR: yes`:
 
 If `decision-log.md` is absent or has no "Promotes to ADR: yes" entries, skip silently.
 
+## Record
+
+Run `speq record <plan-name>` after the ADR fragment validates. The CLI merges every delta by its markers, strips the markers, validates each merged spec, archives the plan to `specs/_recorded/NNN-<plan-name>`, and rebuilds the search index. It rejects a plan with an invalid delta (an unrecognized anchor, a `CHANGED` or `REMOVED` block whose anchor is absent, two blocks on one anchor) before writing anything. On a non-zero exit, stop and report its message. Do not guess fixes, and do not merge or move files by hand.
+
 ## Finalize
 
 1. Final validation: `speq feature validate`
-2. Archive: `mv specs/_plans/<plan-name> specs/_recorded/NNN-<plan-name>`, where NNN = (count of existing entries in `specs/_recorded/`) + 1, zero-padded to 3 digits
-3. If `specs/_recorded/NNN-<plan-name>/tasks.md` contains a `## PR Lifecycle` section, set `- [x] recorded` there. Section absent → skip silently (the plan did not run through the headless pipeline). Writing the mark in the same step as the `mv` keeps the crash window minimal — the actor that archives records that it archived.
-
-If a threshold is exceeded, return BEFORE archiving and ask the orchestrator to clarify with the user.
+2. If `specs/_recorded/NNN-<plan-name>/tasks.md` contains a `## PR Lifecycle` section, set `- [x] recorded` there. Section absent → skip silently (the plan did not run through the headless pipeline).
 
 ## Anti-Patterns
 
 | Pattern | Why Wrong |
 |---------|-----------|
-| Merging without running validator | Broken specs may land |
+| Merging deltas or moving the plan directory by hand | `speq record` is the tested implementation of the merge and archive; a hand merge skips its anchor checks |
 | Assuming split/domain reorganization | User must decide |
-| Rewriting scenario wording during merge | Recording is a mechanical operation |
-| Leaving DELTA markers | Pollutes permanent specs |
-| `DELTA:CHANGED` or `DELTA:REMOVED` naming a scenario absent from the target spec | Rejected — `record` errors instead of silently merging nothing |
-| Heading left outside the marker, so the block's first line is not a recognized anchor | Rejected — `record` cannot tell what the block targets |
-| Two delta blocks of one file sharing an anchor, whatever their marker kinds | Rejected — the merged result would depend on block order; write one block carrying the final text |
 | Filling an optional ADR section the entry does not carry | Rejected — `### Options Considered` and `### Consequences` are emitted only from the entry's own Alternatives/Consequences fields, never inferred from prose |
