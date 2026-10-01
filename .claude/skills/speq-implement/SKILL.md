@@ -2,6 +2,7 @@
 name: speq-implement
 description: "Orchestrate implementation of a reviewed plan: task breakdown, TDD sub-agents, code review, and verification report. Use when the user asks to implement, build, or execute a plan under specs/_plans/ — after /speq-plan, before /speq-record. Arg: <plan-name>."
 model: sonnet
+effort: medium
 ---
 
 # Spec Implementer (Orchestrator)
