@@ -174,7 +174,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 2. Commit the plan and open the draft PR with one composite call:
    ```
    Run — operation: ship-draft (per /speq-git-operations)
-     paths: the plan directory, excluding specs/_plans/<plan-name>/notes/planning.md
+     paths: the plan directory, excluding specs/_plans/<plan-name>/notes/
      message: spec(plan): <plan-name>
      title: <the derived <type>(<scope>): <slug>>
      body: per references/pr-body-template.md, ending "Draft pending
@@ -184,7 +184,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 3. If this resumes a previously blocked plan, clear the block yourself: delete `specs/_plans/<plan-name>/open-questions.md` and the `> **Status:** blocked …` banner line from `plan.md`, then:
    ```
    Run — operation: commit (per /speq-git-operations)
-     paths: the plan directory, excluding specs/_plans/<plan-name>/notes/planning.md
+     paths: the plan directory, excluding specs/_plans/<plan-name>/notes/
      message: spec(plan): resolve open questions for <plan-name>
 
    Run — operation: push (per /speq-git-operations)
@@ -212,7 +212,7 @@ Keep each question short: state the decision in 1-2 sentences and point to the r
 Then, with one composite call:
 ```
 Run — operation: flag-blocked (per /speq-git-operations)
-  paths: the plan directory, excluding specs/_plans/<plan-name>/notes/planning.md
+  paths: the plan directory, excluding specs/_plans/<plan-name>/notes/
   message: spec(plan): flag open questions for <plan-name>
   title: <the derived <type>(<scope>): <slug>>
   body: per references/pr-body-template.md's blocked-path rule — a blocked

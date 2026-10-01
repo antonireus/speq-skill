@@ -78,8 +78,8 @@ Run — operation: commit (per /speq-git-operations)
   paths: implementation files, version bump, specs/_plans/<plan-name>/
          (the whole plan directory — not an itemized subset, so new
          artifacts ride along automatically — except
-         specs/_plans/<plan-name>/notes/planning.md, which stays out of
-         every commit)
+         specs/_plans/<plan-name>/notes/, local scratch that stays out
+         of every commit)
   message: <type>(<scope>): implement <plan-name>    # type + scope per speq-plan-pr's PR-title derivation rule
 
 Run — operation: push (per /speq-git-operations)
@@ -141,7 +141,7 @@ specs/
 │   ├── tasks.md                          # Pre-created here (§ PR Lifecycle checkpoint); WBS filled by speq-implement
 │   ├── review-findings.md                # Created by code-reviewer
 │   ├── review/round-N.md                 # Created by plan-reviewer
-│   ├── notes/<group-letter>.md           # Rotation hand-off notes, created by implementer agents
+│   ├── notes/<group-letter>.md           # Rotation hand-off notes, created by implementer agents; never committed
 │   └── verification-report.md            # Created by speq-implement
 └── _recorded/NNN-<plan-name>/            # Archived by speq-record (gitignored by default)
 ```
