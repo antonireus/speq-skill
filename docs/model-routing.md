@@ -28,11 +28,11 @@ Workflow skills coordinate the work. They gather context, ask clarifying questio
 | `/speq:implement-pr` | `sonnet` | `medium` | Thin orchestration (headless) |
 | `/speq:audit` | `sonnet` | `medium` | Thin orchestration (health check) |
 | Utility skills | inherited | inherited | Reference material for the caller |
-| `planner-agent` | `opus` | `xhigh` | Spec deltas, ADRs, task decomposition |
-| `plan-reviewer` | `opus` | `xhigh` | Adversarial plan review |
+| `planner-agent` | `opus` | `high` | Spec deltas, ADRs, task decomposition |
+| `plan-reviewer` | `opus` | `high` | Adversarial plan review |
 | `implementer-agent` | `sonnet` | `high` | Standard implementation tasks |
-| `implementer-expert-agent` | `opus` | `xhigh` | Tasks tagged `[expert]` |
-| `code-reviewer` | `opus` | `xhigh` | Adversarial implementation review |
+| `implementer-expert-agent` | `opus` | `high` | Tasks tagged `[expert]` |
+| `code-reviewer` | `opus` | `high` | Adversarial implementation review |
 | `audit-agent` | `opus` | `high` | Mission ↔ spec-library sync |
 | `adr-audit-agent` | `opus` | `high` | ADR noise and accuracy review |
 | `recorder-agent` | `sonnet` | `medium` | Deterministic spec merge and archive |
@@ -53,11 +53,11 @@ Workflow skills coordinate the work. They gather context, ask clarifying questio
 | `/speq:implement-pr` | `gpt-5.4` | `medium` | Thin orchestration (headless) |
 | `/speq:audit` | `gpt-5.4` | `medium` | Thin orchestration (health check) |
 | Utility skills | inherited | inherited | Reference material for the caller |
-| `planner-agent` | `gpt-5.5` | `xhigh` | Spec deltas, ADRs, task decomposition |
-| `plan-reviewer` | `gpt-5.5` | `xhigh` | Adversarial plan review |
+| `planner-agent` | `gpt-5.5` | `high` | Spec deltas, ADRs, task decomposition |
+| `plan-reviewer` | `gpt-5.5` | `high` | Adversarial plan review |
 | `implementer-agent` | `gpt-5.4` | `high` | Standard implementation tasks |
-| `implementer-expert-agent` | `gpt-5.5` | `xhigh` | Tasks tagged `[expert]` |
-| `code-reviewer` | `gpt-5.5` | `xhigh` | Adversarial implementation review |
+| `implementer-expert-agent` | `gpt-5.5` | `high` | Tasks tagged `[expert]` |
+| `code-reviewer` | `gpt-5.5` | `high` | Adversarial implementation review |
 | `audit-agent` | `gpt-5.5` | `high` | Mission ↔ spec-library sync |
 | `adr-audit-agent` | `gpt-5.5` | `high` | ADR noise and accuracy review |
 | `recorder-agent` | `gpt-5.4` | `medium` | Deterministic spec merge and archive |
