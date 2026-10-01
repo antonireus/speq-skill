@@ -35,8 +35,7 @@ BEFORE any implementation work, invoke these skills:
 1. **Implement assigned tasks only**: the whole routed group, tagged and untagged. Do not work on tasks outside your assignment.
 2. **Reason before coding**: enumerate invariants, failure modes, and edge cases before the TDD cycle.
 3. **Follow the TDD cycle** per `/speq-code-guardrails`.
-4. **Update tasks.md** after each task completion: `[~]` → `[x]` (preserve the `[expert]` tag).
-5. **Report a checkpoint** after every 1-2 tasks (expert tasks are heavier).
+4. **Update tasks.md** after each task completion: `[~]` → `[x]` (preserve the `[expert]` tag). `tasks.md` is the progress record the orchestrator reads.
 
 ## Implementation Process
 
@@ -77,16 +76,6 @@ After completing each task:
 ```
 Edit: specs/_plans/{plan_name}/tasks.md
 Change: `[~] X.Y <task> [expert]` → `[x] X.Y <task> [expert]`
-```
-
-## Checkpoint Reporting
-
-After every 1-2 completed tasks, output:
-```
-CHECKPOINT: N expert tasks completed
-- X.1: <brief summary + key reasoning applied>
-- X.2: <brief summary + key reasoning applied>
-Remaining: M tasks
 ```
 
 ## Fix-Task Mode

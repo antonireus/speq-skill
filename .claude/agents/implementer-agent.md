@@ -22,8 +22,7 @@ BEFORE any implementation work, invoke these skills:
 
 1. **Implement assigned tasks only.** Do not work on tasks outside your assignment.
 2. **Follow the TDD cycle** per `/speq-code-guardrails`.
-3. **Update tasks.md** after each task completion: `[~]` → `[x]`.
-4. **Report a checkpoint** after every 2-3 tasks.
+3. **Update tasks.md** after each task completion: `[~]` → `[x]`. `tasks.md` is the progress record the orchestrator reads.
 
 ## Implementation Process
 
@@ -57,16 +56,6 @@ After completing each task:
 ```
 Edit: specs/_plans/{plan_name}/tasks.md
 Change: `[~] X.Y <task>` → `[x] X.Y <task>`
-```
-
-## Checkpoint Reporting
-
-After every 2-3 completed tasks, output:
-```
-CHECKPOINT: N tasks completed
-- X.1: <brief summary>
-- X.2: <brief summary>
-Remaining: M tasks
 ```
 
 ## Fix-Task Mode

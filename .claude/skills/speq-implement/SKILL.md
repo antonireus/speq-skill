@@ -32,7 +32,7 @@ Do not invoke coding skills (`/speq-code-tools`, `/speq-ext-research`, `/speq-co
 - Never implement directly. Delegate all coding work.
 - Rotate sub-agents to keep context windows fresh.
 
-**Rotation rule:** sub-agents checkpoint after every 2-3 tasks (expert: 1-2). When a sub-agent has completed `max_tasks_per_agent` (default 5) tasks, or returns `ROTATION NEEDED`: read tasks.md for current state, note the completed tasks from the return, and spawn a fresh agent of the SAME type with the remaining tasks. Repeat until the group is complete.
+**Rotation rule:** give each sub-agent at most `max_tasks_per_agent` (default 5) tasks of its group. When it returns, or returns `ROTATION NEEDED`: read tasks.md for current state, note the completed tasks from the return, and spawn a fresh agent of the same type with the remaining tasks. Repeat until the group is complete.
 
 **Rotation hand-off:** the outgoing agent writes a hand-off note to `specs/_plans/<plan-name>/notes/<group-letter>.md` (its own duty, per its Early Termination section). `<group-letter>` is the group's letter only — the token before the `:` in its Parallelization-table `Group` entry (group `A: plan-log validation` → `notes/A.md`), never the full group name and never a slug of it. Add one line to the fresh agent's brief: `Orientation: read specs/_plans/<plan-name>/notes/<group-letter>.md first`. If the note is absent, omit the line. The note is working state inside the plan directory: `/speq-record`'s archive step moves it into `specs/_recorded/` with the rest of the plan, and it is never committed evidence.
 
@@ -131,7 +131,6 @@ this group's tasks are shaped this way. Omit this section if the plan has no
 - Knowledge: <the group's Knowledge entry from the plan's Parallelization table — read these spec deltas and files first; omit this line if the plan has no Knowledge column>
 - Orientation: read specs/_plans/{plan_name}/notes/<group-letter>.md first <rotation respawns only; <group-letter> is the group's letter only, the token before ":" in its Group entry — e.g. notes/A.md; omit otherwise>
 - Update tasks.md after each task completion (preserve task numbering)
-- Report checkpoint after every 2-3 tasks
 - Project Hook: <if active, ".speq/implement-hook.md — read it and apply it"; otherwise omit this line>
 ```
 
@@ -158,7 +157,6 @@ this group's tasks are shaped this way. Omit this section if the plan has no
 - Orientation: read specs/_plans/{plan_name}/notes/<group-letter>.md first <rotation respawns only; <group-letter> is the group's letter only, the token before ":" in its Group entry — e.g. notes/A.md; omit otherwise>
 - The untagged tasks in the list are yours too — the group routes as one unit
 - Preserve the [expert] tag when updating status markers
-- Checkpoint after every 1-2 tasks (expert tasks are heavier)
 - Report key reasoning / invariants applied
 - Project Hook: <if active, ".speq/implement-hook.md — read it and apply it"; otherwise omit this line>
 ```
