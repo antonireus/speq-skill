@@ -23,6 +23,12 @@ The CLI is installed locally and on the path. Invoke via `speq`.
 | `speq search query "<query>"` | Semantic search |
 | `speq feature validate` | Validate all specs |
 | `speq feature validate <domain>/<feature>` | Validate single feature |
+| `speq search index` | Build or rebuild the search index |
+| `speq plan list` | List active plans under `specs/_plans/` |
+| `speq plan validate <plan-name>` | Validate a plan's structure and delta formatting |
+| `speq decision-log validate` | Validate the ADR fragments under `specs/_decision/` |
+| `speq decision-log show` | Assemble the ADR fragments and print the decision record |
+| `speq record <plan-name>` | Merge a plan's deltas into permanent specs, validate them, and archive the plan |
 
 ## Workflow
 
