@@ -87,7 +87,7 @@ Set `Promotes to ADR: no` for local design choices, scope trims, and implementat
 
 If a decision supersedes an earlier one, name the superseded decision's title in the entry. `recorder-agent` maps that title to the superseded ADR's slug at promotion.
 
-### 6. Expert-Task Tagging (CRITICAL)
+### 6. Expert-Task Tagging
 
 Tag tasks that require deep reasoning with `[expert]` at the end of the task line:
 
@@ -109,7 +109,7 @@ Tag tasks that require deep reasoning with `[expert]` at the end of the task lin
 - Copy-paste from existing patterns
 - Documentation or config changes
 
-Over-tagging wastes tokens; under-tagging risks defects. If any task in a parallelization group carries the tag, the orchestrator routes the whole group to `implementer-expert-agent`; all-untagged groups go to `implementer-agent`. One tag prices its entire group at the expert model, so tag sparingly. Most tasks stay untagged.
+If any task in a parallelization group carries the tag, the orchestrator routes the whole group to `implementer-expert-agent`; all-untagged groups go to `implementer-agent`. One tag prices its entire group at the expert model, while a missing tag on genuinely hard work risks defects. Most tasks stay untagged.
 
 ### 7. Validate Plan
 
@@ -137,13 +137,11 @@ A revision-mode respawn (below) reads this note first, before it re-reads `plan.
 
 This note stays out of every commit. It is local scratch, never evidence.
 
-This is a hypothesis-driven fix for the revision loop's cold-context re-exploration cost. It is not a confirmed root-cause fix. Confirming it needs a re-measured token and cache volume on a real consuming project, after this ships.
-
 ### 9. Pre-Return Self-Check
 
 Before you return to the orchestrator, run this checklist once against your own `plan.md`, `decision-log.md`, and spec deltas. Answer each line against the artifacts on disk, not from memory. Fix anything that answers "no" before you return.
 
-This is prevention, not the review gate. `plan-reviewer` still runs next, full-strength, unchanged. This step only lowers how often it finds something. Its effect is checkable over time: compare round-1 BLOCKER counts before and after this step ships. The orchestrator's step-7 report already states that count.
+This is prevention, not the review gate. `plan-reviewer` still runs next, full-strength, unchanged.
 
 Check your artifacts do not trip `/speq-plan-review`'s finding tags, across its five non-Prose axes (Prose stays `/speq-writing-guardrails`'s job):
 

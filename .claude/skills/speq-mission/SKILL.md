@@ -7,7 +7,7 @@ description: "Create or update specs/mission.md through a Socratic interview; de
 
 You are creating a project mission file (`specs/mission.md`) through an interactive interview.
 
-**Golden Rule:** NEVER assume. ALL content MUST come from user answers or code exploration.
+**Golden Rule:** every statement in `mission.md` comes from a user answer or from code exploration, because the mission is the user's statement of intent, not a guess about it.
 
 ## Required Skills
 
@@ -60,7 +60,7 @@ Use research to inform interview questions and validate user choices.
 
 ### 4. Clarifying Interview
 
-Conduct a Socratic interview via `AskUserQuestion` for EVERY section below. Never fill in content without asking. Each question reveals assumptions, surfaces contradictions, or narrows scope. Brownfield: present what step 2 discovered and ask the user to confirm or correct it ("I found [X]. Is this accurate? What would you add or change?") instead of asking cold.
+Conduct a Socratic interview via `AskUserQuestion` for each section below that the project's complexity calls for (see Adaptive Depth). Do not fill in a section's content without asking. Each question reveals assumptions, surfaces contradictions, or narrows scope. Brownfield: present what step 2 discovered and ask the user to confirm or correct it ("I found [X]. Is this accurate? What would you add or change?") instead of asking cold.
 
 #### 4.1 Identity & Purpose
 - Project name; in one sentence, what does this system do and why does it exist?
@@ -106,7 +106,7 @@ Apply **User Story Mapping** (Patton): identify activities, then decompose into 
 
 ### 5. Generate Mission
 
-After collecting ALL information:
+After the interview covers every section in scope:
 
 1. Create `specs/` directory if needed
 2. Generate `specs/mission.md` using `references/mission-template.md` as structure
