@@ -65,7 +65,7 @@ Read the checkpoint and enter at the phase the entry-dispatch table in `referenc
 
 ### Phase A: Implement + Commit
 
-**A1. Blocker check**: read `specs/_plans/<plan-name>/open-questions.md`. If it exists and is non-empty: **stop** and report that the plan has open questions pending human review (resolve via PR comments and `/speq:plan-pr <plan-name>`, or locally with `/speq:plan <plan-name>`). This is the human-in-the-loop point.
+**A1. Blocker check**: read `specs/_plans/<plan-name>/open-questions.md`. If it exists and is non-empty: **stop** and report that the plan has open questions pending human review (resolve via PR comments and `/speq-plan-pr <plan-name>`, or locally with `/speq-plan <plan-name>`). This is the human-in-the-loop point.
 
 **A2. Implement**: invoke `/speq-implement <plan-name>` and let it run to completion, unchanged, reused as-is. It fills `tasks.md` below the lifecycle section, spawns the implementer agents, runs `code-reviewer`, and produces `verification-report.md`. When it returns and `verification-report.md` is present, mark `[x] implemented`.
 
@@ -112,13 +112,13 @@ Run — operation: ship-ready (per /speq-git-operations)
   title: <type>(<scope>): <slug>    # same derivation rule as speq-plan-pr
   body: per /speq-plan-pr's references/pr-body-template.md — update Current
         State/What Changes if implementation diverged from the plan, fold
-        in both test-suite results (integration + e2e) and the /speq:record
+        in both test-suite results (integration + e2e) and the /speq-record
         outcome into the Test plan checklist, keep the <details> pointer
 ```
 
 `ship-ready`'s create-pr step returns the draft PR `speq-plan-pr` opened (or opens one if the plan was only implemented locally), and its ready-pr step marks it ready.
 
-**C2. Comment**: post the verification summary per `references/implementation-summary-template.md`, built from `<archive-path>/verification-report.md` (the `specs/_recorded/NNN-<plan-name>` path `/speq-record` reported). Compose per `speq-writing-guardrails`' PR-facing content rule before calling `comment-pr`:
+**C2. Comment**: post the verification summary per `references/implementation-summary-template.md`, built from `<archive-path>/verification-report.md` (the `specs/_recorded/NNN-<plan-name>` path `/speq-record` reported). Compose it per `/speq-writing-guardrails` before calling `comment-pr`:
 
 ```
 Run — operation: comment-pr (per /speq-git-operations)
