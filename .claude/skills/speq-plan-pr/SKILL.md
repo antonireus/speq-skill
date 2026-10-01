@@ -191,7 +191,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
    ```
    The PR stays a draft. `speq-implement-pr` is the only skill that marks it ready.
 
-No comment on a clean return. `ADVISORY` findings and Design Decisions entries never need human attention — that is what makes them `ADVISORY` and not `BLOCKER` — so they stay silent in `review/round-<N>.md` and `decision-log.md`, reachable through the PR body's `<details>` pointer for anyone who wants them. A PR comment is for something that needs the approver's eyes; nothing on this path does.
+No comment on a clean return. `ADVISORY` findings and Design Decisions entries never need human attention — that is what makes them `ADVISORY` and not `BLOCKER` — so they stay silent in `review/round-<N>.md` and `decision-log.md`, reachable through the PR body's `<details>` pointer for anyone who wants them. After `/speq-implement-pr` records the plan, they survive only in git history, and the ready PR links them at the evidence commit. A PR comment is for something that needs the approver's eyes; nothing on this path does.
 
 **`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass — round 1's own when `HUMAN: 0`, or round 2's follow-up — came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
 

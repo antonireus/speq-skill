@@ -72,7 +72,7 @@ speq plan validate <plan-name>
 
 ## Permanent decision log
 
-The permanent decision log lives at `specs/_decision/`. It stores one committed fragment file per plan: `specs/_decision/NNN-<plan-name>.md`. `recorder-agent` writes a fragment during `/speq:record` for every entry marked `Promotes to ADR: yes` in the plan log.
+The permanent decision log lives at `specs/_decision/`. It stores one committed fragment file per plan: `specs/_decision/NNN-<plan-name>.md`. `recorder-agent` writes a fragment during `/speq:record` for every entry marked `Promotes to ADR: yes` in the plan log. Entries marked `no` are not copied anywhere: the plan log moves with the plan into the gitignored `specs/_recorded/`, so they survive only in the commits made before the record.
 
 ### Why fragments and slugs
 

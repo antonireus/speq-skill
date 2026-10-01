@@ -37,6 +37,16 @@ Check: specs/_plans/<plan-name>/verification-report.md exists?
 └─ No  → STOP: "Run /speq-implement <plan-name> first."
 ```
 
+```
+Check: git ls-files --others --exclude-standard specs/_plans/<plan-name>/ lists nothing outside notes/?
+├─ Yes → Proceed
+└─ No  → Ask (AskUserQuestion): "These plan files were never committed: <list>.
+         The archive moves the plan to the gitignored specs/_recorded/, so they
+         will exist only on this machine. Commit them first, or record anyway?"
+```
+
+The archive moves the whole plan directory to `specs/_recorded/`, which is gitignored by default (per `/speq-git-discipline`). After recording, `plan.md`, `review/`, `review-findings.md`, `tasks.md`, `verification-report.md`, and every decision not promoted to an ADR survive in the repository only through the commits that already contain them. `notes/` is local scratch and is excluded from this check. You never commit: the user decides.
+
 ### Phase 3: Delegate to recorder-agent
 
 Spawn the recorder sub-agent with the plan name:
@@ -78,6 +88,8 @@ Report to user:
 ✓ Spec library validated
 ✓ Plan archived: specs/_recorded/NNN-<plan-name>
 ```
+
+Then add one line: the plan's artifacts and non-promoted decisions now live only in git history and in the local, gitignored `specs/_recorded/NNN-<plan-name>/`. The permanent specs and `specs/_decision/` carry everything that stays in the repository.
 
 ## Work Split (reference)
 

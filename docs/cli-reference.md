@@ -221,7 +221,7 @@ This command:
 1. Reads delta specs from `specs/_plans/<plan-name>/`
 2. Merges deltas into permanent specs in `specs/<domain>/<feature>/`
 3. Strips DELTA markers
-4. Archives the plan to `specs/_recorded/NNN-<plan-name>/`, where `NNN` is a record-time sequence number
+4. Archives the plan to `specs/_recorded/NNN-<plan-name>/`, where `NNN` is a record-time sequence number. `specs/_recorded/` is gitignored by default, so the archived plan files leave the tracked tree
 
 ---
 

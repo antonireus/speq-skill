@@ -149,7 +149,7 @@ Merge implemented spec deltas into the permanent spec library.
 5. **Validate** — Runs `speq feature validate`
 6. **Check thresholds** — Flags any feature with more than 10 scenarios, or any domain with more than 8 features, and asks you how to split it. It never reorganizes without your decision
 7. **Promote decisions** — Writes entries marked `Promotes to ADR: yes` in `decision-log.md` to a new `specs/_decision/NNN-<plan-name>.md` fragment
-8. **Archive** — Moves the plan to `specs/_recorded/NNN-<plan-name>/`, where `NNN` is a record-time sequence number
+8. **Archive** — Moves the plan to `specs/_recorded/NNN-<plan-name>/`, where `NNN` is a record-time sequence number. `specs/_recorded/` is gitignored by default, so after a record `plan.md`, the review rounds, the verification report, and every decision not promoted to an ADR exist in the repository only in the commits made before the record. Commit the plan directory before you run `/speq:record`; it asks first if any plan file was never committed
 
 ---
 
