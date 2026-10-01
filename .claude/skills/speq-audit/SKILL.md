@@ -165,7 +165,7 @@ Print the final status and any remaining manual next steps.
 |------|--------------|-----|
 | CLI validators, filesystem/structure checks, summary, remediation gates | This skill (pins Sonnet) | Mechanical + conversational |
 | Mission ↔ spec-library semantic diff | `audit-agent` sub-agent | Reasoning-heavy cross-referencing |
-| ADR read, noise and accuracy verdicts | `adr-audit-agent` sub-agent (pins Fable) | Judgment-heavy. A wrong removal loses a real decision |
+| ADR read, noise and accuracy verdicts | `adr-audit-agent` sub-agent (pins Opus) | Judgment-heavy. A wrong removal loses a real decision |
 
 ## Anti-Patterns
 

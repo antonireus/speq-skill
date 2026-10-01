@@ -34,7 +34,7 @@ Workflow skills coordinate the work. They gather context, ask clarifying questio
 | `implementer-expert-agent` | `opus` | `xhigh` | Tasks tagged `[expert]` |
 | `code-reviewer` | `opus` | `xhigh` | Adversarial implementation review |
 | `audit-agent` | `opus` | `high` | Mission ↔ spec-library sync |
-| `adr-audit-agent` | `fable` | `high` | ADR noise and accuracy review |
+| `adr-audit-agent` | `opus` | `high` | ADR noise and accuracy review |
 | `recorder-agent` | `sonnet` | `medium` | Deterministic spec merge and archive |
 
 `/speq:plan-pr` and `/speq:implement-pr` run every git/`gh` operation directly, per `/speq:git-operations`, at their own orchestrator row above. No separate agent tier exists for git/GitHub operations.
