@@ -34,10 +34,7 @@ If the brief has an `Orientation:` line, read that hand-off note first: it is yo
 
 ### 2. Fill Gaps Only
 
-Task details are already inline in `## Your Tasks`. If the brief has a `## Rationale`
-section, treat it as a verbatim excerpt — do not re-read plan.md for it. Open
-`specs/_plans/{plan_name}/plan.md` yourself only when the brief has no `## Rationale`
-section, or you need context it doesn't cover (e.g. another group's design).
+Task details are already inline in `## Your Tasks`. If the brief has a `## Rationale` section, treat it as a verbatim excerpt — do not re-read plan.md for it. Open `specs/_plans/{plan_name}/plan.md` yourself only when the brief has no `## Rationale` section, or you need context it doesn't cover (e.g. another group's design).
 
 ### 3. Search Specs
 
