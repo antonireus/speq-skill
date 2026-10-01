@@ -95,11 +95,22 @@ transform_codex_markdown() {
     sed_in_place 's/AskUserQuestion/ask the user/g' "$file"
     sed_in_place 's/AskUserTool/ask the user/g' "$file"
     sed_in_place 's/ExitPlanMode/present the plan and ask the user to proceed/g' "$file"
-    sed_in_place 's/TaskCreate/update_plan/g' "$file"
-    sed_in_place 's/TaskUpdate/update_plan/g' "$file"
-    sed_in_place 's/TaskList/review the current session plan/g' "$file"
     sed_in_place 's/Task(/spawn_agent(/g' "$file"
     sed_in_place 's/subagent_type=/agent_type=/g' "$file"
+}
+
+# Codex renders a live progress plan from its update_plan tool. Claude Code
+# models track multi-step work without one, so the shared skill source keeps
+# tasks.md as the only task record and the Codex build adds the mirror rule.
+add_codex_progress_plan() {
+    local file="$1"
+    local anchor='### Phase 3: Implement (Orchestrated)'
+
+    if ! grep -qF "$anchor" "$file"; then
+        log_error "Codex progress-plan anchor not found in $file: $anchor"
+        exit 1
+    fi
+    ANCHOR="$anchor" perl -0pi -e 's{^\Q$ENV{ANCHOR}\E$}{**Progress plan:** mirror the `## Phase N` task lines into `update_plan` so the user sees live progress: one plan step per task, `in_progress` when its group starts, `completed` when the group'"'"'s sub-agent returns it done. `tasks.md` stays the source of truth. After a context loss, rebuild the plan from it.\n\n$ENV{ANCHOR}}m' "$file"
 }
 
 set_codex_skill_model() {
@@ -148,6 +159,9 @@ copy_skill_for_platform() {
             if [[ "$platform" == "codex" ]]; then
                 transform_codex_markdown "$file"
                 set_codex_skill_model "$file" "$source_name"
+                if [[ "$source_name" == "speq-implement" && "$(basename "$file")" == "SKILL.md" ]]; then
+                    add_codex_progress_plan "$file"
+                fi
             fi
         done
     else
