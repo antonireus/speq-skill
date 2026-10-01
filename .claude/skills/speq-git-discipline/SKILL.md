@@ -35,7 +35,7 @@ git diff     # Review actual changes
 
 ## Tracked vs Gitignored Spec Paths
 
-- Everything under `specs/_plans/<plan-name>/` is tracked and committed with the plan directory, never gitignored. This includes the evidence artifacts:
+- Everything under `specs/_plans/<plan-name>/` is tracked and committed with the plan directory, never gitignored, except `notes/`, which holds local scratch (the planning and rotation hand-off notes) and stays out of every commit. The committed files include the evidence artifacts:
   - `open-questions.md` (present only while the plan is blocked)
   - `review/` (plan-review findings, `round-<N>.md`)
   - `review-findings.md` (code-review findings)
