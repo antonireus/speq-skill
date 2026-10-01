@@ -90,12 +90,6 @@ Decompose the plan into a **Work Breakdown Structure** in `specs/_plans/<plan-na
 
 If the plan tagged no tasks and a task clearly needs expert reasoning (for example concurrency, a cross-file refactor, a novel algorithm), you MAY add `[expert]` when materializing tasks.md. Tag sparingly: over-tagging wastes tokens.
 
-Also create runtime tasks:
-```
-For each task in tasks.md:
-  TaskCreate(subject, description, activeForm)
-```
-
 ### Phase 3: Implement (Orchestrated)
 
 For each parallel group in plan's `## Parallelization`:
@@ -106,8 +100,7 @@ For each parallel group in plan's `## Parallelization`:
 4. **Await completion**: the sub-agent returns results or a rotation signal.
 5. **Handle rotation**: apply the Rotation rule and Rotation hand-off above.
 6. **Mark completed**: update tasks.md, `[~]` → `[x]` (preserve the `[expert]` tag).
-7. **Update TaskTools**: `TaskUpdate(taskId, status: "completed")`.
-8. **Next group**: proceed once its dependencies are complete.
+7. **Next group**: proceed once its dependencies are complete.
 
 **Standard subagent invocation** (group has no `[expert]` task):
 
