@@ -6,7 +6,7 @@
 
 ## What are semantic anchors
 
-Semantic anchors are named references to established methodologies, frameworks, and practices, embedded directly in skill instructions. A skill does not re-explain a methodology from scratch. Instead, the skill names the methodology, for example "London School TDD" or "BLUF". The skill then relies on the training data that the model already has for that practice. A single anchor like "Socratic Method" activates more detailed behavior than paragraphs of custom instruction.
+Semantic anchors are named references to established methodologies, frameworks, and practices, embedded directly in skill instructions. A skill does not re-explain a methodology from scratch. Instead, the skill names the methodology, for example "Functional Core, Imperative Shell" or "BLUF". The skill then relies on the training data that the model already has for that practice. A single anchor like "Socratic Method" activates more detailed behavior than paragraphs of custom instruction.
 
 For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/LLM-Coding/Semantic-Anchors) catalog on GitHub.
 
@@ -16,7 +16,7 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 |--------|-------|----------|
 | Information Foraging | speq-cli | Search strategy |
 | Clean Code | speq-code-guardrails | Code quality |
-| London School TDD | speq-code-guardrails | Testing |
+| Functional Core, Imperative Shell | speq-code-guardrails | Testing |
 | SOLID | speq-code-guardrails | Design principles |
 | KISS | speq-code-guardrails | Design principles |
 | DRY | speq-code-guardrails | Design principles |

@@ -62,7 +62,7 @@ It combines skills with a simple CLI called `speq` that adds a semantical search
 
 New to spec-driven development? Read ["Spec-driven development: an introduction"](https://deliberate.codes/blog/2026/spec-driven-development-an-introduction/) and ["Writing specs for AI coding agents"](https://deliberate.codes/blog/2026/writing-specs-for-ai-coding-agents/) on my blog.
 
-Each skill is grounded in [semantic anchors](./docs/semantic-anchors.md) — named references to established methodologies (like London School TDD, BLUF, ADR) that steer AI behavior toward well-documented practices.
+Each skill is grounded in [semantic anchors](./docs/semantic-anchors.md) — named references to established methodologies (like Functional Core, Imperative Shell, BLUF, ADR) that steer AI behavior toward well-documented practices.
 
 ## Who should use it?
 
@@ -124,7 +124,7 @@ The `speq` CLI uses [snowflake-arctic-embed-xs](https://huggingface.co/Snowflake
 ## Acknowledgments
 
 - The `code-reviewer` agent's YAGNI / Over-Engineering review category was inspired by the tag taxonomy of [ponytail](https://github.com/DietrichGebert/ponytail).
-- The [semantic anchor](./docs/semantic-anchors.md) approach — naming established methodologies (Clean Code, London School TDD, MECE, ADR, and others) directly in skill instructions — draws on the [LLM-Coding/Semantic-Anchors](https://github.com/LLM-Coding/Semantic-Anchors) catalog.
+- The [semantic anchor](./docs/semantic-anchors.md) approach — naming established methodologies (Clean Code, Functional Core, Imperative Shell, MECE, ADR, and others) directly in skill instructions — draws on the [LLM-Coding/Semantic-Anchors](https://github.com/LLM-Coding/Semantic-Anchors) catalog.
 
 ## License
 

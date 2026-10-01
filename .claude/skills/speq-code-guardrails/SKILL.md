@@ -19,7 +19,7 @@ TDD workflow and quality guardrails. Draws on established practice, including wo
 
 **No new dependency without confirming the standard library or an already-installed dependency cannot do it first.**
 
-## TDD Cycle (London School)
+## TDD Cycle
 
 ```
 RED    → Write failing test, run it, show failure
@@ -33,10 +33,10 @@ Run ONLY the test you created/changed, not the full suite.
 
 - Arrange, act, assert. One concept per test.
 - The test name states the condition and the expected behavior.
-- Independent and repeatable: no shared mutable state, no real clock, network, filesystem, or unseeded randomness.
+- Independent and repeatable: no shared mutable state, no unseeded randomness. Unit tests touch no real clock, network, or filesystem. Integration and adapter tests use real resources isolated to the test (a temp directory, a local fixture), never shared or remote ones.
 - Cover every branch and every edge case: empty, single, maximum, off-by-one, transition, and each way the operation can fail.
 - Assert observable behavior, never internal state.
-- Pure logic is tested without doubles. Orchestration is tested with doubles at its abstractions. Adapters are tested against the real thing.
+- Functional Core, Imperative Shell: pure logic is tested without doubles. Orchestration is tested with doubles at its abstractions. Adapters are tested against the real thing.
 - Test code follows every rule in this document, same as production code.
 - A skipped or ignored test is a defect. Fix it or delete it.
 
@@ -105,4 +105,4 @@ Run ONLY the test you created/changed, not the full suite.
 
 ## Attribution
 
-Draws on established practice, including R. Martin (*Clean Code*, SOLID, Boy Scout Rule), K. Beck (TDD), and B. Meyer (Command-Query Separation).
+Draws on established practice, including R. Martin (*Clean Code*, SOLID, Boy Scout Rule), K. Beck (TDD), G. Bernhardt (Functional Core, Imperative Shell), and B. Meyer (Command-Query Separation).

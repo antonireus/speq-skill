@@ -39,7 +39,7 @@ Per `/speq-code-guardrails`' Tests section. Tests are quality subjects, not only
 - `[DUPLICATE_TEST]`: duplicate test coverage
 - `[ASSERTION_FREE_TEST]`: test always passes, no assertions
 - `[VAGUE_TEST_NAME]`: test name does not state the condition and expected behavior
-- `[NONDETERMINISTIC_TEST]`: test depends on real clock, network, filesystem, or unseeded randomness
+- `[NONDETERMINISTIC_TEST]`: a unit test touches a real clock, network, or filesystem, or any test depends on shared or remote state or unseeded randomness
 - `[IMPLEMENTATION_COUPLED_TEST]`: test asserts internal state instead of observable behavior
 - `[UNTESTED_ERROR_PATH]`: a failure path with no test
 - `[MISSING_BOUNDARY_TEST]`: no test for empty, single, maximum, off-by-one, or transition input
