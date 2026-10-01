@@ -39,7 +39,6 @@ For more information, see the [LLM-Coding/Semantic-Anchors](https://github.com/L
 | Premortem | speq-plan-review | Risk analysis |
 | Devil's Advocate (diabolus advocatus) | plan-reviewer (agent) | Adversarial review |
 | BLUF (Bottom Line Up Front) | speq-audit | Reporting |
-| London School TDD | speq-implement (template) | Testing |
 | A Philosophy of Software Design (Ousterhout) | speq-design-philosophy | Design principles |
 | Deep Modules | speq-design-philosophy | Design principles |
 | Information Hiding | speq-design-philosophy | Design principles |
