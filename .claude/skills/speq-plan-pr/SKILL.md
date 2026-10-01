@@ -178,7 +178,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
      message: spec(plan): <plan-name>
      title: <the derived <type>(<scope>): <slug>>
      body: per references/pr-body-template.md, ending "Draft pending
-           implementation — run /speq:implement-pr <plan-name> to implement
+           implementation — run /speq-implement-pr <plan-name> to implement
            and mark ready"
    ```
 3. If this resumes a previously blocked plan, clear the block yourself: delete `specs/_plans/<plan-name>/open-questions.md` and the `> **Status:** blocked …` banner line from `plan.md`, then:
@@ -201,7 +201,7 @@ Keep each question short: state the decision in 1-2 sentences and point to the r
    ```markdown
    # Open Questions: <plan-name>
 
-   speq-plan-pr could not complete this plan without human input. What's done so far is committed on this branch. Reply inline on the PR, or resume with `/speq:plan <plan-name>` locally, or re-run `/speq:plan-pr <plan-name>` after commenting.
+   speq-plan-pr could not complete this plan without human input. What's done so far is committed on this branch. Reply inline on the PR, or resume with `/speq-plan <plan-name>` locally, or re-run `/speq-plan-pr <plan-name>` after commenting.
 
    - [ ] <question 1 in 1-2 sentences, or a HUMAN-tagged BLOCKER folded in from step 5 — round-1 Intent-Fidelity, or unresolved after round 2 — link: review/round-<N>.md#<anchor>>
    - [ ] <question 2>

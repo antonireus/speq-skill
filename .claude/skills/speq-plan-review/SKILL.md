@@ -62,7 +62,7 @@ Tag every finding. Group findings by axis in the output.
 
 ### Prose quality: does the writing meet `/speq-writing-guardrails`?
 
-- `[PROSE_BLOAT]`: filler, repetition, unneeded hedging or preamble. Violates BLUF/terseness.
+- `[PROSE_BLOAT]`: filler, repetition, unneeded hedging or preamble. Violates `/speq-writing-guardrails` (lead with the conclusion, remove filler).
 - `[PROSE_UNCLEAR]`: a sentence that is ambiguous, jargon-laden, or not understandable on one read.
 
 Prose findings default to **ADVISORY**: style, not correctness. Escalate a `[PROSE_UNCLEAR]` to **BLOCKER** only when the unclear prose makes a requirement non-actionable. Tag that finding `[AMBIGUOUS_REQUIREMENT]` too; it is the same defect from two angles.
