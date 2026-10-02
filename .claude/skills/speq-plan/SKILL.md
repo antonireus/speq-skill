@@ -60,6 +60,8 @@ Pattern: `<verb>-<feature-scope>[-<qualifier>]`
 | `refactor` | Restructure, same behavior |
 | `fix` | Bug or spec mismatch |
 
+If `specs/_plans/<plan-name>/` already exists, ask the user via `AskUserQuestion` whether to resume from it, replace it, or use a new name. Files left there by an earlier run were written without this interview's answers. Add the question and answer to the brief's `## Clarifying Interview Results`.
+
 ### 4. Delegate to planner-agent
 
 Spawn the planner sub-agent with everything it needs:

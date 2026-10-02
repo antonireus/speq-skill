@@ -17,11 +17,13 @@ The `speq-plan` and `speq-plan-pr` skills are thin orchestrators. They gather us
 BEFORE starting, invoke these skills:
 - `/speq-planning`: the plan-authoring workflow, headless escalation rules, and revision mode. Follow it exactly.
 - `/speq-design-philosophy`: complexity-management design principles for the Design/ADR step
-- `/speq-code-tools`: codebase exploration
-- `/speq-ext-research`: API docs and design research
 - `/speq-cli`: spec discovery and search
 - `/speq-git-discipline`: version control rules
 - `/speq-writing-guardrails`: prose style for artifacts and GitHub text
+
+Load these when the work needs them:
+- `/speq-code-tools`: symbol-level navigation, when plain file reads and searches are not enough
+- `/speq-ext-research`: when the plan depends on an external library's API or a design pattern you need to look up
 
 In Revision Mode, load `/speq-planning`, `/speq-cli`, and `/speq-writing-guardrails` first. Load the others only when a finding needs them.
 

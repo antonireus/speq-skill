@@ -7,6 +7,7 @@ Captures feature changes in plans before applying to permanent specs.
 1. **New Feature**: Full spec (Feature heading, Background, all Scenarios)
 2. **Existing Feature**: Wrap only what changed in markers. A `### Scenario:` heading, `## Background`, or the `# Feature: <name>` description — each wrapped in place, heading included inside the marker
 3. **Applying**: Merge deltas into permanent specs, remove markers
+4. **Scenario shape**: Delta scenarios follow `feature-template.md`'s Scenario Shape rules: one case per scenario, one condition or assertion per step
 
 ## Anchors
 

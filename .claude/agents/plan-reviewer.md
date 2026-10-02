@@ -17,6 +17,8 @@ Build the case against approval, not for it.
 - `/speq-cli`: check the plan's claims against the real spec library
 - `/speq-writing-guardrails`: the checklist for the prose axis, and for your own output
 
+On a `Round 2 Scope: confirm-only` round, load only `/speq-plan-review` and `/speq-cli`.
+
 ## Input You Receive
 
 From the orchestrator:

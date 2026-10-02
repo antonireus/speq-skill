@@ -37,7 +37,7 @@ specs/<domain>/<feature>/spec.md exists?
 Output: specs/_plans/<plan-name>/<domain>/<feature>/spec.md
 ```
 
-**Prose drift check**: after drafting a scenario delta for an existing feature, re-read that feature's `## Background` and `# Feature: <name>` description (`speq feature get <domain>/<feature>`). When the scenario change makes either inaccurate, author a `DELTA:CHANGED` block for that section too, per `/speq-plan`'s `references/delta-template.md`.
+**Prose drift check**: after drafting a scenario delta for an existing feature, re-read that feature's `## Background`, its `# Feature: <name>` description, and its other recorded scenarios (`speq feature get <domain>/<feature>`). When the scenario change makes any of them inaccurate, author a `DELTA:CHANGED` block for it too, per `/speq-plan`'s `references/delta-template.md`.
 
 ### 3. Test Mapping and Verification
 
@@ -47,6 +47,7 @@ Every scenario requires two forms of external proof. No claims, only evidence.
 - Map each scenario to a test (file path + test name). Use an integration test by default
 - Use a unit test instead only when the scenario's behavior is pure computation with no I/O; mark it `Unit` in Scenario Coverage
 - One test per scenario by default; combine only when scenarios share setup and assertions
+- Confirm a Checklist command actually compiles and runs each mapped test: check feature flags, conditional compilation, skip/ignore markers, and test targets
 
 **Manual invocation** (mandatory per feature):
 - Concrete commands that invoke the built software
@@ -119,7 +120,7 @@ Before returning:
 speq plan validate <plan-name>
 ```
 
-Fix any failures. Common fixes:
+Fix any failures and warnings. Fix a too-many-AND-steps warning by splitting the scenario. Never merge steps into one compound step or drop a requirement step to get under the limit. Common fixes:
 - Close unclosed delta markers with `<!-- /CHANGED -->`, `<!-- /NEW -->`, `<!-- /REMOVED -->`
 - Uppercase RFC 2119 keywords
 - Fix step formatting (bold keywords: `*GIVEN*`, `*WHEN*`, `*THEN*`, `*AND*`)
@@ -139,19 +140,20 @@ This note stays out of every commit. It is local scratch, never evidence.
 
 ### 9. Pre-Return Self-Check
 
-Before you return to the orchestrator, run this checklist once against your own `plan.md`, `decision-log.md`, and spec deltas. Answer each line against the artifacts on disk, not from memory. Fix anything that answers "no" before you return.
+Before you return to the orchestrator, run this checklist once against your own `plan.md`, `decision-log.md`, and spec deltas. Answer each line against the artifacts on disk, not from memory. Fix anything that does not hold before you return.
 
 This is prevention, not the review gate. `plan-reviewer` still runs next, full-strength, unchanged.
 
-Check your artifacts do not trip `/speq-plan-review`'s finding tags, across its five non-Prose axes (Prose stays `/speq-writing-guardrails`'s job):
+- Every answer in `## Clarifying Interview Results` shows up in a scenario, a task, or a Design Decision, and nothing in the plan lacks a traceable user need.
+- Every mapped test is compiled and run by a Checklist command (step 3).
+- For each existing feature you changed, its Background, description, and other recorded scenarios still hold, or carry a `DELTA:CHANGED` block (step 2's Prose drift check).
+- No two scenarios in this plan contradict each other.
+- Each scenario covers one case: no either/or inputs or outcomes, and no step that merges several conditions or assertions.
+- Every spec delta has an implementing task, and every task traces to a delta or a rule in the target repository's `CLAUDE.md`/`AGENTS.md` (a CHANGELOG entry, for example).
+- Where the change touches security, performance, migration, or concurrency, a scenario or task covers it.
+- Every `Promotes to ADR: yes` entry passes the promotion gate (step 5).
 
-- **Intent Fidelity**: no `[INTENT_DRIFT]` (a substituted or reinterpreted goal), `[SCOPE_CREEP]` (untraceable extras), or `[SCOPE_REDUCTION]` (a dropped ask with no user agreement).
-- **Feasibility**: no `[EFFORT_MISESTIMATION]` (a task line that hides more work than it states), `[HIDDEN_DEPENDENCY]` (an unmodeled prerequisite), `[UNSTATED_ASSUMPTION]` (a load-bearing belief never stated), or `[NFR_IGNORED]` (security, performance, migration, or concurrency left untouched where the change touches it).
-- **Requirement Quality**: no `[AMBIGUOUS_REQUIREMENT]` (not testable as written), `[COMPLETENESS_GAP]` (a missing edge case or error path), `[REQUIREMENT_CONFLICT]` (contradicts another delta or a recorded spec — check via `/speq-cli`), or `[IMPLEMENTATION_LEAKAGE]` (a Background or Feature description fact no scenario step depends on).
-- **Task Breakdown**: no `[TRACEABILITY_GAP]` (a delta with no implementing task, or the reverse), `[TASK_GRANULARITY]` (a task too large to verify as one unit), or `[CLUSTER_INCOHERENCE]` (a Parallelization group sliced by layer, or overlapping `Knowledge` entries across groups).
-- **Design Depth** (per `/speq-design-philosophy`): no `[SHALLOW_DESIGN]`, `[INFORMATION_LEAKAGE]` (a format or protocol decision reflected across modules), `[TACTICAL_SHORTCUT]` with no scheduled follow-up, `[BOUNDARY_VIOLATION]` (business logic depending directly on a delivery mechanism, storage engine, or framework), or `[ADR_OVERPROMOTION]` (a `Promotes to ADR: yes` entry that fails the promotion gate).
-
-Open `/speq-plan-review` for a tag's full definition if you are unsure it applies.
+`/speq-plan-review` holds the full finding taxonomy `plan-reviewer` applies next.
 
 ## Headless / Non-Interactive Mode
 
