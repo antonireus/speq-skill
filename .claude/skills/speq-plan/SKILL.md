@@ -34,6 +34,8 @@ speq feature list
 speq search query "<relevant terms>"
 ```
 
+If the request links a GitHub issue, fetch it with `gh issue view <number> --json title,body,comments`.
+
 Collect only enough context for good interview questions, not a full exploration.
 
 ### 2. Clarifying Interview (orchestrator)
@@ -44,9 +46,9 @@ Apply the Socratic Method via `AskUserQuestion`. Never assume. Decompose the pro
 - **Partition**: present alternative solutions as MECE options
 - **Challenge**: test design tradeoffs with counterexamples
 
-Run the interview in every permission mode, auto mode included: the interview is how this skill gets the user's decisions, not an interruption to avoid. A request that links an issue or proposes a fix still needs it, to confirm the approach and the scope edges. `/speq-plan-pr` is the path for planning without a live user.
+Run the interview in every permission mode, auto mode included: the interview is how this skill gets the user's decisions, not an interruption to avoid. A request that links an issue or proposes a fix still needs it, for the choices the issue leaves open and the scope edges. `/speq-plan-pr` is the path for planning without a live user.
 
-Ask about every choice that changes behavior, scope, or the approach. Only details too small to ask about (naming, file placement, an obvious convention) may go to the brief as assumptions. Keep the user's answers verbatim for the brief.
+Ask about every open choice that changes behavior, scope, or the approach: one where the user could reasonably pick a different option. Do not ask the user to confirm the request itself, an approach the request or linked issue already specifies, or work the target repository's rules require (a CHANGELOG entry, for example). Pass those to the brief as given. Only details too small to ask about (naming, file placement, an obvious convention) may go to the brief as assumptions. Keep the user's answers verbatim for the brief.
 
 ### 3. Plan Name (orchestrator)
 
