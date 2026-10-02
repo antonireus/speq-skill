@@ -14,7 +14,7 @@ mod version {
             .arg("--version")
             .assert()
             .success()
-            .stdout(predicate::str::is_match(r"^speq \d+\.\d+\.\d+\n$").unwrap());
+            .stdout(predicate::str::is_match(r"^speq \d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?\n$").unwrap());
     }
 
     #[test]
@@ -23,6 +23,6 @@ mod version {
             .arg("-V")
             .assert()
             .success()
-            .stdout(predicate::str::is_match(r"^speq \d+\.\d+\.\d+\n$").unwrap());
+            .stdout(predicate::str::is_match(r"^speq \d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?\n$").unwrap());
     }
 }
