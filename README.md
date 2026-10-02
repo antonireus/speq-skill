@@ -19,7 +19,7 @@
 ## Getting Started
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/ar/install.sh | bash
 ```
 
 Then open Claude Code or Codex and start with the matching trigger: `/speq:mission` in Claude Code, or `$` in Codex.

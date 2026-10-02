@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # speq-skill installer
-# Usage: curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/ar/install.sh | bash
 
 set -e
 
