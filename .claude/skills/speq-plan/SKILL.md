@@ -147,8 +147,10 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 1. Respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings from that file, resolve each one per its `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, re-run `speq plan validate`, and return its per-finding `Resolved:`/`Could not resolve:` report per `/speq-planning`'s Revision Mode.
 2. Respawn `plan-reviewer` for round 2 with the path to `review/round-1.md` plus a `Round 2 Scope:` field, so it confirms each round-1 BLOCKER is resolved before anything else. `MECHANICAL` means no human is needed to decide the fix, not that the fix needs no check: a fix can be partial or can contradict a `/speq-planning` rule.
-   - `Round 2 Scope: confirm-only` when round 1's `HUMAN` count was 0, or when the plan is small: the plan-name's verb, per the verb table, is `fix`; `plan.md` has no `## Design` section; and `decision-log.md`'s `## Design Decisions` section is empty.
-   - `Round 2 Scope: full` otherwise. The reviewer then also checks for new findings.
+   - `Round 2 Scope: confirm-only` when either of these holds:
+     - round 1's `HUMAN` count was 0. This alone is enough; plan size does not matter.
+     - the plan is small, meaning all three hold: the plan-name's verb, per the verb table, is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty.
+   - `Round 2 Scope: full` when neither holds. The reviewer then also checks for new findings.
 3. Do not run a third adversarial round, even if round 2 raises new BLOCKERs.
 
 **BLOCKERs remaining after round 2, split by `Escalation`:**

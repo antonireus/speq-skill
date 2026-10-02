@@ -147,6 +147,8 @@ This is prevention, not the review gate. `plan-reviewer` still runs next, full-s
 - Every answer in `## Clarifying Interview Results` shows up in a scenario, a task, or a Design Decision, and nothing in the plan lacks a traceable user need.
 - Every mapped test is compiled and run by a Checklist command (step 3).
 - For each existing feature you changed, its Background, description, and other recorded scenarios still hold, or carry a `DELTA:CHANGED` block (step 2's Prose drift check).
+- Every Background and description line you wrote states a fact some scenario step depends on, not how the code implements it.
+- Every item in `plan.md`'s Impact has a scenario, and, when the target repository keeps a CHANGELOG, an entry in the task that writes it.
 - No two scenarios in this plan contradict each other.
 - Each scenario covers one case: no either/or inputs or outcomes, and no step that merges several conditions or assertions.
 - Every spec delta has an implementing task, and every task traces to a delta or a rule in the target repository's `CLAUDE.md`/`AGENTS.md` (a CHANGELOG entry, for example).

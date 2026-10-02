@@ -11,6 +11,7 @@
 - The too-many-AND-steps warning counts only the AND steps after THEN, so preconditions no longer push a scenario over the limit. The warning also says not to drop a step
 - `/speq:plan` asks whether to resume, replace, or rename when `specs/_plans/<plan-name>/` already exists, instead of letting `planner-agent` reuse leftover files. `/speq:planning` checks that a Checklist command runs each mapped test, extends the Prose drift check to the feature's other recorded scenarios, requires fixing validation warnings by splitting scenarios, and replaces the pre-return tag list with concrete checks. The spec templates add Scenario Shape rules (one case per scenario, one condition or assertion per step). `planner-agent` loads `/speq:code-tools` and `/speq:ext-research` only when the work needs them, and a confirm-only `plan-reviewer` round loads only `/speq:plan-review` and `/speq:cli`
 - `/speq:plan`'s interview asks only about open choices, not about confirming the request, an approach the linked issue already specifies, or work the repository's rules require. It fetches a linked GitHub issue with `gh issue view <number> --json title,body,comments`
+- `/speq:plan` and `/speq:plan-pr` state the round-2 scope rule as two separate cases, so a round 1 with `HUMAN: 0` always gets a confirm-only round 2. The planning self-check also verifies that Background and description lines carry no implementation detail, and that every Impact item has a scenario and a CHANGELOG-task entry
 
 ## 0.22.0
 

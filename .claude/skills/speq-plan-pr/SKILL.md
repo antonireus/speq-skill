@@ -154,7 +154,11 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 **If `INTENT > 0`:** the plan solves a different problem than the one asked. Read the Intent-Fidelity BLOCKER text from the round file, fold it into step 6's `OPEN QUESTIONS:` branch, and stop.
 
-**Round 2 Scope** (compute before respawning `plan-reviewer` for round 2): `confirm-only` when round 1's `HUMAN` count was 0, or when all three hold: the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty. Otherwise `full`.
+**Round 2 Scope** (compute before respawning `plan-reviewer` for round 2): `confirm-only` when either of these holds:
+- round 1's `HUMAN` count was 0. This alone is enough; plan size does not matter.
+- the plan is small, meaning all three hold: the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty.
+
+`full` when neither holds.
 
 **If `INTENT == 0` and BLOCKER findings exist:** respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings, execute each `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, re-validate, and return its per-finding `Resolved:`/`Could not resolve:` report per `/speq-planning`'s Revision Mode.
 
