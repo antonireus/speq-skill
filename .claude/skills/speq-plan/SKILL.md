@@ -135,6 +135,8 @@ plan.md, decision-log.md, and every specs/_plans/<plan-name>/**/spec.md delta
 
 It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and returns only `PLAN REVIEW round 1: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — <path>`. `INTENT` counts the BLOCKERs on the Intent Fidelity axis alone; `HUMAN` counts every BLOCKER tagged `Escalation: HUMAN` per `/speq-plan-review`'s Escalation Class section — the rest are `MECHANICAL`.
 
+**Before each respawn after a `plan-reviewer` verdict, tell the user what it found.** Print the counts, one line per BLOCKER from the round file (`[TAG]`, `Location`, the defect in a few words, `Escalation`), and the next step with its reason, for example "Respawning planner-agent to fix 2 MECHANICAL blockers". This is a status message, not a question: continue without waiting.
+
 **If `INTENT > 0`:** the reviewer holds that the plan solves a different problem than the one asked. Read the Intent-Fidelity findings from the round file. Present them via `AskUserQuestion` before any revision. The user accepts the plan as-is, or gives guidance and you respawn `planner-agent` manually.
 
 **If `INTENT == 0` and BLOCKER findings exist:**
