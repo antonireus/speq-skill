@@ -6,6 +6,7 @@ Validates plan structure, spec delta formatting, and spec delta anchors before i
 
 * Plans are stored in `specs/_plans/<plan-name>/`
 * A valid plan MUST contain a `plan.md` file
+* A missing `plan.md` fails validation, but delta specs are still checked
 * A plan MAY contain a `decision-log.md` file in the plan-level (lightweight) format
 * A plan MAY contain spec deltas in `<domain>/<feature>/spec.md` files
 * Spec deltas use DELTA markers: `<!-- DELTA:NEW -->`, `<!-- DELTA:CHANGED -->`, `<!-- DELTA:REMOVED -->`
@@ -17,6 +18,7 @@ Validates plan structure, spec delta formatting, and spec delta anchors before i
 * Anchor checks are skipped when the target spec `specs/<domain>/<feature>/spec.md` does not exist
 * Anchor checks are skipped for a delta file that fails delta parsing
 * A delta file skipped for a parsing failure SHALL produce a warning naming the file
+* `speq record` ignores content outside delta markers, so an unmarked description, Background, or scenario that differs from the target spec produces a warning
 * Plan-level decision logs use H1 `# Decision Log: <plan-name>` and at least one of `## Interview`, `## Design Decisions`, `## Review Findings`
 * Steps MUST be formatted as `* *KEYWORD* <text>` (bullet, emphasized uppercase keyword)
 * Step keywords (GIVEN, WHEN, THEN, AND) MUST be uppercase
@@ -40,6 +42,14 @@ Validates plan structure, spec delta formatting, and spec delta anchors before i
 * *WHEN* the user runs `speq plan validate broken-plan`
 * *THEN* the system SHALL report error "plan.md not found"
 * *AND* the system SHALL exit with non-zero code
+
+### Scenario: Validate plan with missing plan.md still checks deltas
+
+* *GIVEN* a plan named "missing-plan-md" with no `plan.md` file
+* *AND* the plan contains a delta spec with an unclosed delta marker
+* *WHEN* the user runs `speq plan validate missing-plan-md`
+* *THEN* the system SHALL report error "plan.md not found"
+* *AND* the system SHALL report the unclosed delta marker error
 
 ### Scenario: Validate plan with malformed step formatting
 
@@ -174,3 +184,26 @@ Validates plan structure, spec delta formatting, and spec delta anchors before i
 * *THEN* the system SHALL report validation passed
 * *AND* the system MUST NOT report any anchor error
 * *AND* the system SHALL exit with code 0
+
+### Scenario: Validate plan with unmarked edits to an existing feature warns
+
+* *GIVEN* a plan named "unmarked-edit" whose delta targets an existing feature
+* *AND* the delta changes the `## Background` text outside any delta marker
+* *WHEN* the user runs `speq plan validate unmarked-edit`
+* *THEN* the system SHOULD report a warning that names the delta file and the `## Background` anchor
+* *AND* the warning SHALL say that `speq record` ignores content outside delta markers
+* *AND* the system SHALL exit with code 0
+
+### Scenario: Validate plan with an unmarked scenario missing from the target warns
+
+* *GIVEN* a plan named "unmarked-edit" whose delta targets an existing feature
+* *AND* the delta adds a scenario outside any delta marker
+* *WHEN* the user runs `speq plan validate unmarked-edit`
+* *THEN* the system SHOULD report a warning that the unmarked scenario does not exist in the target spec
+* *AND* the warning SHALL advise wrapping it in `<!-- DELTA:NEW -->`
+
+### Scenario: Validate plan with unmarked content copied unchanged passes silently
+
+* *GIVEN* a plan named "prose-changed" whose delta copies a scenario of the target spec unchanged outside any delta marker
+* *WHEN* the user runs `speq plan validate prose-changed`
+* *THEN* the system MUST NOT report an unmarked-edit warning

@@ -674,6 +674,93 @@ pub fn merge_delta(existing: &str, delta: &str) -> Result<String, RecordError> {
     merge_delta_tracked("", existing, delta).map(|(merged, _)| merged)
 }
 
+/// The raw markdown of the section `anchor` names, heading included, without
+/// trailing blank lines. `None` when `content` holds no such section.
+pub fn section_markdown(content: &str, anchor: &DeltaAnchor) -> Option<String> {
+    let (start, end) = locate_section(content, anchor)?;
+    let lines: Vec<&str> = content.lines().collect();
+    Some(lines[start..end].join("\n").trim_end().to_string())
+}
+
+/// One message per section a delta file edits outside any delta marker.
+///
+/// `speq record` merges marked blocks only, so an unmarked `# Feature`
+/// description, `## Background`, or scenario whose text differs from the
+/// recorded spec is an edit that would be lost. Unmarked sections that match the
+/// recorded spec (context the author copied in) produce no message. Whitespace
+/// differences are ignored.
+pub fn unmarked_edit_messages(delta: &str, target: &str) -> Vec<String> {
+    let unmarked = unmarked_content(delta);
+    let mut messages = Vec::new();
+
+    for anchor in section_anchors(&unmarked) {
+        let Some(edited) = section_markdown(&unmarked, &anchor) else {
+            continue;
+        };
+        let message = match section_markdown(target, &anchor) {
+            Some(recorded) if normalized(&recorded) == normalized(&edited) => continue,
+            Some(_) => format!(
+                "unmarked `{label}` differs from the recorded spec. `speq record` ignores \
+                 content outside delta markers, so this edit would be lost. Wrap the section \
+                 in <!-- DELTA:CHANGED --> to merge it, or copy the recorded text unchanged.",
+                label = anchor.label()
+            ),
+            None => format!(
+                "unmarked `{label}` does not exist in the recorded spec. `speq record` ignores \
+                 content outside delta markers, so it would not be added. Wrap it in \
+                 <!-- DELTA:NEW --> to add it.",
+                label = anchor.label()
+            ),
+        };
+        messages.push(message);
+    }
+
+    messages
+}
+
+/// `delta` with every delta block removed, markers and body alike.
+fn unmarked_content(delta: &str) -> String {
+    let mut kept = Vec::new();
+    let mut in_block = false;
+    for line in delta.lines() {
+        let trimmed = line.trim();
+        if parse_delta_open(trimmed).is_some() {
+            in_block = true;
+        } else if parse_delta_close(trimmed).is_some() {
+            in_block = false;
+        } else if !in_block {
+            kept.push(line);
+        }
+    }
+    kept.join("\n")
+}
+
+fn section_anchors(content: &str) -> Vec<DeltaAnchor> {
+    content
+        .lines()
+        .map(str::trim)
+        .filter_map(|line| {
+            if let Some(title) = line.strip_prefix(SCENARIO_HEADING_PREFIX) {
+                Some(DeltaAnchor::Scenario(title.trim().to_string()))
+            } else if line == BACKGROUND_HEADING {
+                Some(DeltaAnchor::Background)
+            } else if line.starts_with(FEATURE_HEADING_PREFIX) {
+                Some(DeltaAnchor::Description)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn normalized(section: &str) -> Vec<&str> {
+    section
+        .lines()
+        .map(str::trim)
+        .filter(|line| !line.is_empty())
+        .collect()
+}
+
 fn locate_section(content: &str, anchor: &DeltaAnchor) -> Option<(usize, usize)> {
     let lines: Vec<&str> = content.lines().collect();
     let start = lines

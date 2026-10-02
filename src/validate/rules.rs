@@ -111,10 +111,12 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
 }
 
 fn check_rfc2119_in_step(step_text: &str, scenario_name: &str, result: &mut ValidationResult) {
+    // Keywords inside inline code are literals, not requirements.
+    let prose = without_code_spans(step_text);
     // Check for uppercase RFC 2119 keyword first
-    if contains_rfc2119_keyword(step_text) {
+    if contains_rfc2119_keyword(&prose) {
         // Also check if there's a lowercase version alongside (we warn about it)
-        if let Some(keyword) = find_lowercase_rfc2119_keyword(step_text) {
+        if let Some(keyword) = find_lowercase_rfc2119_keyword(&prose) {
             result.add_warning(ValidationWarning::LowercaseRfcKeyword {
                 keyword,
                 step: step_text.to_string(),
@@ -124,7 +126,7 @@ fn check_rfc2119_in_step(step_text: &str, scenario_name: &str, result: &mut Vali
     }
 
     // No uppercase keyword found, check for lowercase version
-    if let Some(keyword) = find_lowercase_rfc2119_keyword(step_text) {
+    if let Some(keyword) = find_lowercase_rfc2119_keyword(&prose) {
         // Lowercase keyword found - this counts as having a keyword, but warn
         result.add_warning(ValidationWarning::LowercaseRfcKeyword {
             keyword,
@@ -147,6 +149,10 @@ fn is_word_boundary(text: &str, pos: usize) -> bool {
     let before = bytes[pos - 1].is_ascii_alphanumeric();
     let after = bytes[pos].is_ascii_alphanumeric();
     before != after
+}
+
+fn without_code_spans(text: &str) -> String {
+    text.split('`').step_by(2).collect::<Vec<_>>().join(" ")
 }
 
 fn contains_rfc2119_keyword(text: &str) -> bool {
@@ -201,11 +207,36 @@ mod tests {
     use super::*;
     use crate::validate::parser::Step;
 
+    #[test]
+    fn too_many_and_steps_warning_says_to_split() {
+        let warning = ValidationWarning::TooManyAndSteps {
+            scenario: "S".to_string(),
+            count: 4,
+        };
+        assert!(
+            warning
+                .to_string()
+                .contains("Split it into separate scenarios")
+        );
+    }
+
+    #[test]
+    fn ignores_keywords_inside_inline_code() {
+        let mut result = ValidationResult::new();
+        check_rfc2119_in_step("the system SHALL print `may fail`", "S", &mut result);
+        assert!(result.warnings.is_empty());
+
+        let mut result = ValidationResult::new();
+        check_rfc2119_in_step("the output is `SHALL`", "S", &mut result);
+        assert!(!result.errors.is_empty());
+    }
+
     fn valid_spec() -> FeatureSpec {
         FeatureSpec {
             feature_name: Some("Test".to_string()),
             description: Some("Description".to_string()),
             has_background: true,
+            background: Vec::new(),
             has_scenarios_section: true,
             scenarios: vec![Scenario {
                 name: "Test scenario".to_string(),

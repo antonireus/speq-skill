@@ -47,6 +47,7 @@ The validator SHALL ensure that each scenario follows the GIVEN-WHEN-THEN struct
 * *GIVEN* a scenario with more than 3 AND steps total
 * *WHEN* the validator checks the scenario structure
 * *THEN* the system SHOULD report a warning indicating the scenario has too many AND steps
+* *AND* the warning SHALL advise splitting the scenario instead of merging steps
 * *AND* the system SHALL NOT report this as an error
 
 ### Scenario: No warning for acceptable AND count

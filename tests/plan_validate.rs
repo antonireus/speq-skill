@@ -84,6 +84,32 @@ mod plan_exists {
             .code(1)
             .stdout(predicate::str::contains("plan.md not found"));
     }
+
+    #[test]
+    fn checks_deltas_when_plan_md_missing() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "missing-plan-md");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "missing-plan-md"])
+            .assert()
+            .code(1)
+            .stdout(predicate::str::contains("plan.md not found"))
+            .stdout(predicate::str::contains("DELTA:NEW not closed"));
+    }
+
+    #[test]
+    fn resolves_the_plan_from_inside_the_plan_directory() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "valid-plan");
+
+        cmd()
+            .current_dir(tmp.path().join("specs/_plans/valid-plan"))
+            .args(["plan", "validate", "valid-plan"])
+            .assert()
+            .success();
+    }
 }
 
 mod delta_markers {
@@ -341,7 +367,28 @@ mod delta_anchors {
             .current_dir(tmp.path())
             .args(["plan", "validate", "prose-changed"])
             .assert()
-            .success();
+            .success()
+            .stdout(predicate::str::contains("unmarked").not());
+    }
+
+    #[test]
+    fn warns_about_unmarked_edits_to_an_existing_feature() {
+        let tmp = TempDir::new().unwrap();
+        setup_fixture(&tmp, "unmarked-edit");
+        setup_target_specs(&tmp, "unmarked-edit");
+
+        cmd()
+            .current_dir(tmp.path())
+            .args(["plan", "validate", "unmarked-edit"])
+            .assert()
+            .success()
+            .stdout(predicate::str::contains(
+                "test/feature/spec.md: unmarked `## Background` differs from the recorded spec",
+            ))
+            .stdout(predicate::str::contains(
+                "unmarked `### Scenario: Unmarked addition` does not exist in the recorded spec",
+            ))
+            .stdout(predicate::str::contains("Scenario: Existing one").not());
     }
 
     #[test]

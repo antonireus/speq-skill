@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- `speq feature get` keeps inline code spans (they were dropped), shows the feature description apart from the Background, and prints the Background items. The new `--raw` flag prints the exact markdown of a feature or a single scenario, for copying a section into a `DELTA:CHANGED` block
+- `speq plan validate` warns when a delta edits an existing feature outside delta markers: an unmarked description, Background, or scenario that differs from the recorded spec, or an unmarked scenario the spec does not have. `speq record` ignores that content, so the edit would be lost
+- `speq plan validate` checks a plan's deltas even when `plan.md` is missing, and still fails on the missing `plan.md`
+- Every `speq` command finds `specs/` in the nearest parent directory, so it works from any subdirectory of the project. With no `specs/` in any parent, it exits 1 and names the working directory, instead of printing `No features found.` with exit 0
+- The too-many-AND-steps warning now advises splitting the scenario instead of merging steps. `speq search query` shows each result's first step as its snippet instead of repeating the scenario name. RFC 2119 keyword checks ignore text inside inline code
+
 ## 0.22.0
 
 - Serena now starts via a `serena` command installed once with `uv tool install -p 3.13 serena-agent`, instead of a per-start `uvx` fetch from its git repository. The installer provisions the tool (optional, non-fatal if `uv` is absent) and replaces a stale git-sourced Codex registration on re-run.

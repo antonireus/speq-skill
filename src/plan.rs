@@ -1,7 +1,7 @@
 use std::path::Path;
 use thiserror::Error;
 
-use crate::record::{check_anchor_rules, find_delta_specs, parse_deltas};
+use crate::record::{check_anchor_rules, find_delta_specs, parse_deltas, unmarked_edit_messages};
 use crate::validate;
 use crate::validate::report::{ValidationError, ValidationWarning};
 
@@ -9,9 +9,6 @@ use crate::validate::report::{ValidationError, ValidationWarning};
 pub enum PlanValidationError {
     #[error("Plan not found: {name}")]
     PlanNotFound { name: String },
-
-    #[error("plan.md not found in plan directory")]
-    PlanMdNotFound,
 
     #[error("Failed to read file: {path}")]
     FileReadError { path: String },
@@ -49,6 +46,8 @@ pub struct PlanValidationResult {
     pub spec_validation_errors: Vec<SpecValidationResult>,
     pub spec_validation_warnings: Vec<SpecValidationResult>,
     pub decision_log_warnings: Vec<String>,
+    /// Unmarked edits in delta files that `speq record` would drop.
+    pub delta_warnings: Vec<String>,
 }
 
 impl PlanValidationResult {
@@ -121,12 +120,13 @@ pub fn validate_plan(
         });
     }
 
-    let plan_md = plan_dir.join("plan.md");
-    if !plan_md.exists() {
-        return Err(PlanValidationError::PlanMdNotFound);
-    }
-
     let mut result = PlanValidationResult::new();
+
+    // A missing plan.md fails the plan, but the deltas are still checked so the
+    // author sees every problem in one run.
+    if !plan_dir.join("plan.md").exists() {
+        result.add_error("plan.md not found in plan directory".to_string());
+    }
 
     // Find all delta spec files in the plan directory
     let delta_specs =
@@ -150,6 +150,7 @@ pub fn validate_plan(
 
         validate_delta_markers(&content, &relative_path, &mut result);
         validate_delta_anchors(&content, &relative_path, &target_spec, &mut result);
+        warn_unmarked_edits(&content, &relative_path, &target_spec, &mut result);
 
         if let Ok(validation_result) = validate::run(spec_path) {
             result.distribute_spec_validation_result(relative_path, validation_result);
@@ -250,6 +251,26 @@ fn validate_delta_anchors(
     }
 }
 
+/// Warn about every section the delta edits outside delta markers.
+///
+/// A delta for a new feature records as a whole file, so unmarked content is
+/// intended there and only deltas against an existing spec are compared.
+fn warn_unmarked_edits(
+    content: &str,
+    file_path: &str,
+    target_spec: &Path,
+    result: &mut PlanValidationResult,
+) {
+    let Ok(target) = std::fs::read_to_string(target_spec) else {
+        return;
+    };
+    for message in unmarked_edit_messages(content, &target) {
+        result
+            .delta_warnings
+            .push(format!("{file_path}: {message}"));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -292,8 +313,14 @@ mod tests {
         fs::create_dir_all(&plan_dir).unwrap();
         // No plan.md created
 
-        let result = validate_plan(&tmp.path().join("specs"), "incomplete");
-        assert!(matches!(result, Err(PlanValidationError::PlanMdNotFound)));
+        let result = validate_plan(&tmp.path().join("specs"), "incomplete").unwrap();
+        assert!(!result.is_success());
+        assert!(
+            result
+                .errors
+                .iter()
+                .any(|e| e.contains("plan.md not found"))
+        );
     }
 
     #[test]
