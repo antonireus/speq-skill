@@ -119,11 +119,13 @@ If any task in a parallelization group carries the tag, the orchestrator routes 
 
 ### 7. Validate Plan
 
-Before returning:
+Before returning, and only once `plan.md` and `decision-log.md` exist (the validator reports an error while `plan.md` is missing):
 
 ```bash
 speq plan validate <plan-name>
 ```
+
+Write each scenario with at most 3 AND steps from the start, so the validator has nothing to split.
 
 Fix any failures and warnings. Fix a too-many-AND-steps warning by splitting the scenario. Never merge steps into one compound step or drop a requirement step to get under the limit. Common fixes:
 - Close unclosed delta markers with `<!-- /CHANGED -->`, `<!-- /NEW -->`, `<!-- /REMOVED -->`
@@ -180,5 +182,6 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 - You MAY also fix an ADVISORY finding when it corrects a fact you can verify in the repository (a count, a path, a test name, a missing task a project rule requires) and the change stays local. Report each as `Fixed advisory: <title>: <evidence>`.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
+- When a finding's `Fix:` leaves a choice open (a default, a boundary, which of two behaviors), decide it by the brief and the interview, record it as a `decision-log.md` entry, and return `Chose: <title>: <decision> (decision-log [<n>])`. The orchestrator shows these to the user. If the brief and the interview cannot settle it, escalate instead.
 - Return one line per blocker you addressed: `Resolved: <title>: <evidence>` or `Could not resolve: <title>: <why>`. The orchestrator uses these lines to decide the next step, so include them even when every finding resolved cleanly.
 - If resolving a blocker surfaces a genuinely irreducible new decision, escalate it exactly as during initial planning (interactive: signal back with a concrete question; headless: `OPEN QUESTIONS:` sentinel).

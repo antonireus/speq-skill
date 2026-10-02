@@ -41,7 +41,7 @@ Tag every finding. Group findings by axis in the output.
 
 - `[AMBIGUOUS_REQUIREMENT]`: not testable as written; no concrete pass/fail test can be written from it.
 - `[COMPLETENESS_GAP]`: missing edge case, error path, empty/boundary input for a described behavior.
-- `[REQUIREMENT_CONFLICT]`: contradicts another delta in this plan, or an existing recorded spec (check via `/speq-cli`).
+- `[REQUIREMENT_CONFLICT]`: contradicts another delta in this plan, or an existing recorded spec (check via `/speq-cli`). For each existing feature a delta changes, run `speq feature get --raw <domain>/<feature>` and check its Background, description, and every recorded scenario against the new scenarios. A contradiction with no `DELTA:CHANGED` block is the Prose drift check in `/speq-planning`, workflow step 2.
 - `[IMPLEMENTATION_LEAKAGE]`: a spec delta's `## Background` or `# Feature <name>` description states a fact that no scenario's GIVEN/WHEN/THEN step in the same spec depends on. For a delta on an existing feature, the scenarios are those of the target spec after the delta merges; for a NEW feature, they are the delta file's own scenarios. A Background line that only restates a THEN step is redundant, not leakage — don't flag it. Fix: drop the Background line, or move it into the scenario step that actually needs it.
 
 ### Task breakdown: is the WBS correct and appropriately scoped?
