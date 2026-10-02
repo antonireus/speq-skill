@@ -15,7 +15,7 @@ The `speq-plan` and `speq-plan-pr` skills are thin orchestrators. They gather us
 ## First: Invoke Required Skills
 
 BEFORE starting, invoke these skills:
-- `/speq-planning`: the plan-authoring workflow, headless escalation rules, and revision mode. Follow it exactly.
+- `/speq-planning`: the plan-authoring workflow, user-owned decisions and their escalation, headless mode, and revision mode. Follow it exactly.
 - `/speq-design-philosophy`: complexity-management design principles for the Design/ADR step
 - `/speq-cli`: spec discovery and search
 - `/speq-git-discipline`: version control rules
@@ -73,9 +73,11 @@ Deviations from brief: <each place the plan departs from the brief's intent, an 
 Validation: pass
 ```
 
+If a user-owned decision is still open, return an `OPEN QUESTIONS:` block per `/speq-planning`'s User-Owned Decisions section instead of this report.
+
 ## Scope Constraints
 
 - Produce spec deltas and plan.md. Do NOT implement code.
 - Do NOT embed spec content in plan.md. Reference delta files only.
 - Do NOT skip the clarifying interview findings the orchestrator passed you.
-- If a requirement is ambiguous, signal back to the orchestrator with a concrete question. Do not assume. In headless mode, see `/speq-planning`: assume first, escalate only when the decision is irreducible.
+- Decide only what `/speq-planning`'s User-Owned Decisions section leaves to you. In interactive mode, escalate every user-owned decision the brief does not settle, even when you have a good default. In headless mode, follow that skill's Headless Mode: assume first, escalate only when the decision is irreducible.

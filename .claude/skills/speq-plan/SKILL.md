@@ -36,19 +36,18 @@ speq search query "<relevant terms>"
 
 If the request links a GitHub issue, fetch it with `gh issue view <number> --json title,body,comments`.
 
-Collect only enough context for good interview questions, not a full exploration.
+Read the code the change touches: each file, function, or type the request or linked issue names, and the direct callers of each. Use targeted reads (search for the symbol, then read its body), not whole files. Stop there. Discovery finds the decisions to ask about; `planner-agent` does the full exploration.
 
 ### 2. Clarifying Interview (orchestrator)
 
-Apply the Socratic Method via `AskUserQuestion`. Never assume. Decompose the problem space with MECE partitioning:
-
-- **Probe**: surface hidden assumptions with open-ended questions
-- **Partition**: present alternative solutions as MECE options
-- **Challenge**: test design tradeoffs with counterexamples
+The user owns every user-owned decision, as `/speq-planning`'s `## User-Owned Decisions` section defines it. Read that section first. The interview settles these decisions before planning starts, via `AskUserQuestion`. Never assume.
 
 Run the interview in every permission mode, auto mode included: the interview is how this skill gets the user's decisions, not an interruption to avoid. A request that links an issue or proposes a fix still needs it, for the choices the issue leaves open and the scope edges. `/speq-plan-pr` is the path for planning without a live user.
 
-Ask about every open choice that changes behavior, scope, or the approach: one where the user could reasonably pick a different option. Do not ask the user to confirm the request itself, an approach the request or linked issue already specifies, or work the target repository's rules require (a CHANGELOG entry, for example). Pass those to the brief as given. Only details too small to ask about (naming, file placement, an obvious convention) may go to the brief as assumptions. Keep the user's answers verbatim for the brief.
+1. **List the decisions.** Write down the decisions the plan has to make. Check every area in the User-Owned Decisions list against the code Discovery read, even when the request or linked issue specifies the approach. A specified approach usually leaves some of them open: what partial input does, when an error now appears, whether a new function is public.
+2. **Mark what settles each one:** the request, the linked issue, a target-repository rule that leaves only one option, or nothing. A rule that offers alternatives settles nothing.
+3. **Ask about every decision nothing settles.** Give MECE options, with your recommendation first. When the code shows why the choice matters, cite it as a counterexample (`file:line`). Do not ask the user to confirm the request itself, an approach the request or linked issue specifies, or an obligation the target repository's rules impose (a required CHANGELOG entry, for example).
+4. **Record the rest.** Keep the user's answers verbatim for the brief. Write each decision you did not ask about to `## Orchestrator Assumptions` with the source that settles it, so `plan-reviewer` can challenge a wrong skip. Details too small to ask about (naming, file placement, an obvious convention) go there too.
 
 ### 3. Plan Name (orchestrator)
 
@@ -81,13 +80,13 @@ Write the brief once, to `specs/_plans/<plan-name>/notes/brief.md` (create `note
 <verbatim Q&A from the AskUserQuestion exchanges: only questions the user actually answered>
 
 ## Orchestrator Assumptions
-<small details you settled without asking the user, one line each, or "none". These are open to challenge, unlike the interview answers>
+<each decision you did not ask about, with the source that settles it (`settled by: request | issue | <rule>`), and small details you settled yourself; one line each, or "none". These are open to challenge, unlike the interview answers>
 
 ## Templates
 <this skill's base directory>/references/ (plan-template.md, delta-template.md, feature-template.md, decision-log-plan-template.md)
 
 ## Existing Context
-<the exact `speq domain list` / `speq feature list` / `speq search query "..."` / `speq feature get` calls you ran, each followed by its output — name the query, not just the result>
+<the exact `speq domain list` / `speq feature list` / `speq search query "..."` / `speq feature get` calls you ran, each followed by its output — name the query, not just the result. Then the code sites Discovery read, one `file:line` per line>
 
 ## External Research
 <any research already conducted, or "none — agent to research as needed">
@@ -115,9 +114,9 @@ After the spawn, say one line that the planner is running and end the turn. When
 
 When the sub-agent returns:
 
-1. Read the sub-agent's `Validation:` line. Run `speq plan validate <plan-name>` yourself only when that line is missing or is not `pass`.
-2. List all created files.
-3. If the sub-agent escalated a question, resolve it with the user, append the answer to the brief's `## Clarifying Interview Results`, and respawn with the same brief path.
+1. If the return starts with `OPEN QUESTIONS:`, ask each question via `AskUserQuestion`, with the planner's options and its recommended option first. Append each question and answer to the brief's `## Clarifying Interview Results`, then respawn `planner-agent` with the same short prompt and brief path. Do this before the review in step 6, and again whenever a revision pass returns `OPEN QUESTIONS:`.
+2. Read the sub-agent's `Validation:` line. Run `speq plan validate <plan-name>` yourself only when that line is missing or is not `pass`.
+3. List all created files.
 
 ### 6. Adversarial Plan Review (orchestrator)
 
@@ -204,7 +203,8 @@ Each sub-agent pins its own model and effort in its frontmatter, so planning qua
 |---------|-----------|
 | Authoring plan.md or spec deltas in the orchestrator | `planner-agent` owns all plan authoring |
 | Skipping the clarifying interview, in any permission mode | Content comes from user answers, never assumptions; `/speq-plan-pr` is the non-interactive path |
-| Moving an approach or scope decision into `## Orchestrator Assumptions` | That section is for details too small to ask about; a decision the user owns is an interview question |
+| Moving an unsettled user-owned decision into `## Orchestrator Assumptions` | That section is for decisions a named source settles and details too small to ask about; a decision the user owns is an interview question |
+| Interviewing from the issue text alone | The open choices sit in the code the change touches; read it in Discovery first |
 | A third adversarial review round | Bounded to 2 — a `MECHANICAL` remainder gets one direct fix pass instead, a `HUMAN` remainder goes to the user |
 | Asking the user about a `MECHANICAL` finding | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly, no interruption |
 | Skipping round 2 after a fix pass | An unchecked fix can ship a partial resolution; a `HUMAN: 0` round 1 gets a confirm-only round 2, not none |

@@ -76,11 +76,10 @@ Prose findings default to **ADVISORY**: style, not correctness. Escalate a `[PRO
 
 Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL`. This decides two things downstream, both in the orchestrator: how much round 2 checks (an all-`MECHANICAL` round 1 gets a confirm-only round 2 after the fix pass; a `HUMAN` finding gets a full round 2), and what happens if a finding is still open once review is done: `HUMAN` findings reach the user (via `AskUserQuestion` or an `OPEN QUESTIONS:` PR comment); `MECHANICAL` ones get one direct fix from `planner-agent`, no further review round, no human interruption unless that fix itself fails.
 
-`HUMAN` — same bar as `/speq-planning`'s headless escalation rule, applied here to a review finding instead of a planning choice:
-- Irreversible, or changes what the feature does for a user
-- Genuinely incompatible architectural designs with no clear winner
-- Security or compliance consequence
-- A load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies)
+`HUMAN`: the fix needs a judgment only the requester can make. The bar depends on the brief's mode, using the same rules `/speq-planning` gives the planner:
+- **Interactive brief** (no `## Interview Mode` section): the fix needs a user-owned decision, per `/speq-planning`'s User-Owned Decisions section, that the brief does not settle.
+- **Headless brief** (`## Interview Mode` is `headless`): the fix needs a decision `/speq-planning`'s Headless Mode would escalate: irreversible, a change to what the feature does for a user, genuinely incompatible architectural designs with no clear winner, or a security or compliance consequence.
+- **Both modes:** a load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies).
 
 A fact any of the plan's own artifacts, the codebase, or the recorded spec library *can* settle is `MECHANICAL`, however tedious checking it is — checking is not judgment. Don't stretch the fourth bullet to cover it: a stale test-name citation, a scenario that contradicts another scenario, or a tooling gap the plan's own text already describes are all things `plan-reviewer` can verify itself, not things it must ask about.
 

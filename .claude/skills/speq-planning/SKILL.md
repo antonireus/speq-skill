@@ -1,6 +1,6 @@
 ---
 name: speq-planning
-description: Plan-authoring workflow — spec delta authoring, test mapping, plan.md/decision-log.md generation, expert-task tagging, headless escalation, and revision mode. Triggered by planner-agent.
+description: Plan-authoring workflow — spec delta authoring, test mapping, plan.md/decision-log.md generation, expert-task tagging, user-owned decisions and their escalation, headless mode, and revision mode. Triggered by planner-agent.
 ---
 
 # Plan Authoring
@@ -152,6 +152,7 @@ Before you return to the orchestrator, run this checklist once against your own 
 This is prevention, not the review gate. `plan-reviewer` still runs next, full-strength, unchanged.
 
 - Every answer in `## Clarifying Interview Results` shows up in a scenario, a task, or a Design Decision, and nothing in the plan lacks a traceable user need.
+- Every user-owned decision the plan makes is settled by the brief. In headless mode, each one you decided yourself has a Design Decisions entry whose Rationale says so.
 - Every mapped test is compiled and run by a Checklist command (step 3).
 - For each existing feature you changed, its Background, description, and other recorded scenarios still hold, or carry a `DELTA:CHANGED` block (step 2's Prose drift check).
 - Every Background and description line you wrote states a fact some scenario step depends on, not how the code implements it.
@@ -164,13 +165,35 @@ This is prevention, not the review gate. `plan-reviewer` still runs next, full-s
 
 `/speq-plan-review` holds the full finding taxonomy `plan-reviewer` applies next.
 
+## User-Owned Decisions
+
+A user-owned decision is a choice where the user could reasonably pick a different option, and that does at least one of these:
+
+- **Behavior:** changes what the feature does for a user: the input it accepts (partial, empty, invalid, or conflicting input included), its results, or which error appears, and when and where the caller sees it.
+- **Compatibility:** changes behavior that existing callers rely on.
+- **Interface:** adds to, removes from, or changes the public interface.
+- **Design fork:** is irreversible, or picks between genuinely incompatible designs.
+- **Sensitive data:** has a security or compliance consequence, such as where credentials or personal data are kept, for how long, or whether they are logged.
+- **Scope and delivery:** sets what this plan covers and what it leaves to a follow-up, including nearby code with the same defect, or makes a release choice the target repository's rules leave to the author.
+
+The brief settles a user-owned decision when one of these decides it: the request, the linked issue, an answer in `## Clarifying Interview Results`, or a target-repository rule that leaves only one option. A rule that offers alternatives (a version bump or an `[Unreleased]` CHANGELOG entry, for example) settles nothing. An `## Orchestrator Assumptions` entry settles a decision only through the source it names.
+
+Every other choice is yours: naming, file placement, internal structure, test layout, a clear project convention. Make it, and record the significant ones under Design Decisions.
+
+What happens to a user-owned decision the brief does not settle depends on the mode:
+
+- **Interactive** (the orchestrator's prompt has no `Interview Mode` field): the user decides it, not you. Finish the code exploration first, so you return every such decision at once. Then write `notes/planning.md` (step 8) and return the escalation below before you author any artifact that depends on these decisions. The orchestrator asks the user, appends the answers to the brief, and respawns you with the same brief.
+- **Headless** (`Interview Mode: headless`): follow Headless Mode below.
+
+**Escalation format (both modes).** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list, one bullet per decision: the question, why the brief does not settle it (with a file and line when the code shows it), two to four options, and the option you recommend. Do not mix this sentinel into a normal completion report.
+
 ## Headless / Non-Interactive Mode
 
-If the orchestrator's prompt states `Interview Mode: headless` (used by `speq-plan-pr`, never by the interactive `speq-plan`), there is no human to ask mid-planning. Adjust the escalation bar:
+If the orchestrator's prompt states `Interview Mode: headless` (used by `speq-plan-pr`, never by the interactive `speq-plan`), there is no human to ask mid-planning. This section replaces the interactive rule for unsettled user-owned decisions:
 
 - **Assume and document.** For conventions, naming, implementation details, and any choice with a clearly conventional default: make the call and record it as a `decision-log.md` entry (Rationale explains why this default). This is the common case; most headless plans finish without escalating.
 - **Escalate only irreducible decisions**: irreversible ones, changes to what the feature does for a user, genuinely incompatible architectural designs, or security/compliance. Before escalating, save every file completed so far (plan.md, delta specs, decision-log.md) exactly as it stands. The orchestrator persists this partial state for human review, so it must be usable as-is.
-- **Escalation format.** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list of concrete questions. Headless mode changes when to escalate, not the quality bar: same bar as the interactive path's "signal back with a concrete question". Do not mix this sentinel into a normal completion report.
+- **Escalation format.** Use the escalation format in User-Owned Decisions. Headless mode changes when to escalate, not the quality of what you escalate.
 
 ## Revision Mode
 
@@ -182,6 +205,6 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 - You MAY also fix an ADVISORY finding when it corrects a fact you can verify in the repository (a count, a path, a test name, a missing task a project rule requires) and the change stays local. Report each as `Fixed advisory: <title>: <evidence>`.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
-- When a finding's `Fix:` leaves a choice open (a default, a boundary, which of two behaviors), decide it by the brief and the interview, record it as a `decision-log.md` entry, and return `Chose: <title>: <decision> (decision-log [<n>])`. The orchestrator shows these to the user. If the brief and the interview cannot settle it, escalate instead.
+- When a finding's `Fix:` leaves a choice open (a default, a boundary, which of two behaviors), decide it by the brief and the interview, record it as a `decision-log.md` entry, and return `Chose: <title>: <decision> (decision-log [<n>])`. The orchestrator shows these to the user. If the choice is a user-owned decision the brief does not settle, handle it per User-Owned Decisions instead: in interactive mode, escalate it and do not pick.
 - Return one line per blocker you addressed: `Resolved: <title>: <evidence>` or `Could not resolve: <title>: <why>`. The orchestrator uses these lines to decide the next step, so include them even when every finding resolved cleanly.
-- If resolving a blocker surfaces a genuinely irreducible new decision, escalate it exactly as during initial planning (interactive: signal back with a concrete question; headless: `OPEN QUESTIONS:` sentinel).
+- If resolving a blocker surfaces a new user-owned decision the brief does not settle, handle it exactly as during initial planning, per User-Owned Decisions.
