@@ -25,7 +25,7 @@ There are two distinct formats:
 
 ### Promotion gate
 
-`Promotes to ADR: yes` requires a change in behavior, architecture, or design. Procedural and workflow decisions default to `no`. The only override: a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision — the entry's Rationale must state the override explicitly. A corollary of an already-promoted decision is not its own entry: it is recorded as a bullet in that parent entry's `Consequences` line.
+`Promotes to ADR: yes` requires an architecture or design constraint that binds future work and no scenario can express, or a reversal of a decision recorded in `specs/_decision/`. Behavior the plan's scenarios specify stays `no`: the spec and the CHANGELOG already record it, including a fix that removes an unsafe default. Procedural and workflow decisions default to `no`. The only override: a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision — the entry's Rationale must state the override explicitly. A corollary of an already-promoted decision is not its own entry: it is recorded as a bullet in that parent entry's `Consequences` line.
 
 ### Format
 

@@ -4,8 +4,10 @@
 STRUCTURAL TEMPLATE - DO NOT COPY-PASTE
 Generate actual content from the clarifying interview and plan design.
 Capture interview Q&A verbatim or close paraphrase.
-Promotion gate: mark "Promotes to ADR: yes" only for a change in behavior, architecture, or design.
-Procedural and workflow decisions default to "no". The only override is a project-wide process
+Promotion gate: mark "Promotes to ADR: yes" only for an architecture or design constraint that
+binds future work and no scenario can express, or for a reversal of a decision recorded in
+specs/_decision/ (name it as superseded). Behavior the scenarios specify stays "no", including a
+fix that removes an unsafe default. Procedural and workflow decisions default to "no". The only override is a project-wide process
 convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a
 corollary of another decision — state the override explicitly in Rationale when you invoke it.
 A corollary of an already-promoted decision is not its own entry: add it as a bullet in that
