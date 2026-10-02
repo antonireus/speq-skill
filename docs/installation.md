@@ -7,7 +7,7 @@
 ## Quick install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marconae/speq-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/install.sh | bash
 ```
 
 > [!NOTE]
@@ -53,7 +53,7 @@ If your platform has no pre-built binary, or you want to build manually, follow 
 
 ```bash
 # Clone the repository
-git clone https://github.com/marconae/speq-skill && cd speq-skill
+git clone https://github.com/antonireus/speq-skill && cd speq-skill
 
 # Build and install CLI + plugin
 ./scripts/local-install.sh
@@ -97,13 +97,13 @@ codex
 Re-run the install script to get the latest version:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marconae/speq-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/install.sh | bash
 ```
 
 ## Uninstall
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marconae/speq-skill/main/uninstall.sh | bash
+curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/uninstall.sh | bash
 ```
 
 If you installed from source, run locally instead:

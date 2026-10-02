@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # speq-skill uninstaller
-# Usage: curl -fsSL https://raw.githubusercontent.com/marconae/speq-skill/main/uninstall.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/antonireus/speq-skill/main/uninstall.sh | bash
 
 set -e
 
