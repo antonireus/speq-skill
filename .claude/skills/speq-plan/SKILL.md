@@ -44,7 +44,9 @@ Apply the Socratic Method via `AskUserQuestion`. Never assume. Decompose the pro
 - **Partition**: present alternative solutions as MECE options
 - **Challenge**: test design tradeoffs with counterexamples
 
-Keep the user's answers verbatim for the brief. Write any choice you made yourself (a default you picked, an option the user was not asked about) separately, as an assumption.
+Run the interview in every permission mode, auto mode included: the interview is how this skill gets the user's decisions, not an interruption to avoid. A request that links an issue or proposes a fix still needs it, to confirm the approach and the scope edges. `/speq-plan-pr` is the path for planning without a live user.
+
+Ask about every choice that changes behavior, scope, or the approach. Only details too small to ask about (naming, file placement, an obvious convention) may go to the brief as assumptions. Keep the user's answers verbatim for the brief.
 
 ### 3. Plan Name (orchestrator)
 
@@ -75,7 +77,7 @@ Delegate to planner-agent — Plan <plan-name>
 <verbatim Q&A from the AskUserQuestion exchanges: only questions the user actually answered>
 
 ## Orchestrator Assumptions
-<choices you made without asking the user, one line each, or "none". These are open to challenge, unlike the interview answers>
+<small details you settled without asking the user, one line each, or "none". These are open to challenge, unlike the interview answers>
 
 ## Templates
 <this skill's base directory>/references/ (plan-template.md, delta-template.md, feature-template.md, decision-log-plan-template.md)
@@ -185,7 +187,8 @@ Each sub-agent pins its own model and effort in its frontmatter, so planning qua
 | Pattern | Why Wrong |
 |---------|-----------|
 | Authoring plan.md or spec deltas in the orchestrator | `planner-agent` owns all plan authoring |
-| Skipping the clarifying interview | Content comes from user answers, never assumptions |
+| Skipping the clarifying interview, in any permission mode | Content comes from user answers, never assumptions; `/speq-plan-pr` is the non-interactive path |
+| Moving an approach or scope decision into `## Orchestrator Assumptions` | That section is for details too small to ask about; a decision the user owns is an interview question |
 | A third adversarial review round | Bounded to 2 — a `MECHANICAL` remainder gets one direct fix pass instead, a `HUMAN` remainder goes to the user |
 | Asking the user about a `MECHANICAL` finding | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly, no interruption |
 | Skipping round 2 after a fix pass | An unchecked fix can ship a partial resolution; a `HUMAN: 0` round 1 gets a confirm-only round 2, not none |
