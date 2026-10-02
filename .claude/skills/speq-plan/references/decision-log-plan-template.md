@@ -14,7 +14,7 @@ parent entry's Consequences line instead.
 
 ## Interview
 
-<!-- Q&A from the clarifying interview. One Q/A pair per exchange. -->
+<!-- Q&A from the clarifying interview: only questions the user answered. One Q/A pair per exchange. Orchestrator assumptions go under Design Decisions, not here. -->
 
 **Q:** <question asked>
 **A:** <user answer>

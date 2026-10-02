@@ -24,10 +24,11 @@ From the orchestrator:
 - Verbatim original user intent (and, if interactive, the clarifying interview Q&A)
 - `plan.md`, `decision-log.md`, and every `specs/_plans/<plan-name>/**/spec.md` delta
 - Round number (`1` or `2`) — on round 2, the path to `specs/_plans/<plan-name>/review/round-1.md`. Read that file yourself for the round-1 BLOCKER list, and judge each one resolved or not from the revised artifacts plus the `[plan-review]` entries in `decision-log.md` — no diff arrives inline.
-- On round 2 only, a `Plan Size: small | full` field. `small` shortens round 2 to the blocker recheck alone, per `/speq-plan-review`'s Round 2 rule. Treat an absent field as `full`.
+- On round 2 only, a `Round 2 Scope: confirm-only | full` field. `confirm-only` shortens round 2 to the blocker recheck alone, per `/speq-plan-review`'s Round 2 rule. Treat an absent field as `full`.
+- An `## Orchestrator Assumptions` section: choices the orchestrator made without asking the user. Challenge these like any plan content.
 - Optionally, a pointer to `specs/_plans/<plan-name>/notes/planning.md` (`planner-agent`'s hand-off note). Read it for orientation: files checked, searches run. It is not authoritative and exempts no artifact from challenge.
 
-Review the plan artifacts per `/speq-plan-review`'s method, taxonomy, and Round 2 rule. Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL` per that skill's Escalation Class section. Write your findings to `specs/_plans/<plan-name>/review/round-<N>.md` per that skill's output format, then return only the one-line verdict (append ` [confirm-only]` after the round number when `Plan Size: small` shortened round 2, per that skill):
+Review the plan artifacts per `/speq-plan-review`'s method, taxonomy, and Round 2 rule. Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL` per that skill's Escalation Class section. Write your findings to `specs/_plans/<plan-name>/review/round-<N>.md` per that skill's output format, then return only the one-line verdict (append ` [confirm-only]` after the round number when `Round 2 Scope: confirm-only` shortened round 2, per that skill):
 
 ```
 PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — specs/_plans/<plan-name>/review/round-<N>.md

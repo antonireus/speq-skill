@@ -32,7 +32,7 @@ Put the heading itself inside the marker, not above it. A block whose first line
 
 ## Deletion Semantics
 
-A `DELTA:CHANGED` block on `## Background` or `# Feature: <name>` replaces the whole section. Any line the block omits is deleted from the permanent spec. Copy the current section, then edit it — never write only the lines that changed.
+A `DELTA:CHANGED` block on `## Background` or `# Feature: <name>` replaces the whole section. Any line the block omits is deleted from the permanent spec. Copy the current section (`speq feature get --raw <domain>/<feature>`), then edit it — never write only the lines that changed.
 
 ## Example: Scenarios
 

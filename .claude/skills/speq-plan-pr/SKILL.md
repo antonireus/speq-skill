@@ -154,18 +154,18 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 **If `INTENT > 0`:** the plan solves a different problem than the one asked. Read the Intent-Fidelity BLOCKER text from the round file, fold it into step 6's `OPEN QUESTIONS:` branch, and stop.
 
-**Plan Size classification** (compute before respawning `plan-reviewer` for round 2): the plan is `small` when all three hold — the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty. Otherwise `full`.
+**Round 2 Scope** (compute before respawning `plan-reviewer` for round 2): `confirm-only` when round 1's `HUMAN` count was 0, or when all three hold: the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty. Otherwise `full`.
 
 **If `INTENT == 0` and BLOCKER findings exist:** respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings, execute each `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, re-validate, and return its per-finding `Resolved:`/`Could not resolve:` report per `/speq-planning`'s Revision Mode.
 
-**Round 2 runs only if round 1's `HUMAN` count was greater than 0.** A round 1 with `HUMAN: 0` means every BLOCKER was `MECHANICAL` — the reviewer already judged none of them needed adversarial re-checking, only a fix. Skip straight to the ship decision below; do not respawn `plan-reviewer`.
+**Round 2 runs whenever round 1 raised a BLOCKER.** `MECHANICAL` means no human is needed to decide the fix, not that the fix needs no check: a fix can be partial or can contradict a `/speq-planning` rule.
 
-- **`HUMAN > 0`:** respawn `plan-reviewer` for round 2 with the path to `review/round-1.md` plus the computed `Plan Size: small | full` field, to confirm resolution (or, on `small`, confirm and stop there). Do not run a third adversarial review round.
+- Respawn `plan-reviewer` for round 2 with the path to `review/round-1.md` plus the computed `Round 2 Scope: confirm-only | full` field, to confirm resolution (or, on `confirm-only`, confirm and stop there). Do not run a third adversarial review round.
   - **BLOCKERs remaining after round 2, split by `Escalation`:** a `MECHANICAL` remainder gets one more direct pass — respawn `planner-agent` with the path to `review/round-2.md` and the still-open `MECHANICAL` findings; same Revision Mode format, no further `plan-reviewer` round (correctness here is checkable, not adjudicated). A `HUMAN` remainder folds into step 6's `OPEN QUESTIONS:` branch as the questions list.
 
-**Ship decision, whichever path produced the final fix pass** (round 1 alone when `HUMAN: 0`, or the round-2 `MECHANICAL` follow-up above): clean only if `speq plan validate` passed AND every finding came back `Resolved:`. Any `Could not resolve:` line, or a failed re-validate, is not a clean return — fold that finding into `OPEN QUESTIONS:` too, with its `Could not resolve:` reason as the question text. A `MECHANICAL` tag means the reviewer judged it not to need human judgment; it does not guarantee a fix exists on the first retry, and this is not the place to find out by shipping it silently.
+**Ship decision, whichever path produced the final fix pass** (round 1's fix pass confirmed by round 2, or the round-2 `MECHANICAL` follow-up above): clean only if `speq plan validate` passed AND every finding came back `Resolved:`. Any `Could not resolve:` line, or a failed re-validate, is not a clean return — fold that finding into `OPEN QUESTIONS:` too, with its `Could not resolve:` reason as the question text. A `MECHANICAL` tag means the reviewer judged it not to need human judgment; it does not guarantee a fix exists on the first retry, and this is not the place to find out by shipping it silently.
 
-**ADVISORY findings:** carry into step 7's terminal report only — never a PR comment or body content, per step 6. Read from the last round file that actually ran — round 1's, if round 2 was skipped entirely (`HUMAN: 0`) or ran confirm-only (`Plan Size: small`); round 2's otherwise. Never block or persist them.
+**ADVISORY findings:** carry into step 7's terminal report only — never a PR comment or body content, per step 6. Read from the last round file that ran a full pass: round 1's if round 2 ran confirm-only, round 2's otherwise. Never block or persist them.
 
 ### 6. Branch on the Result
 
@@ -194,7 +194,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 No comment on a clean return. `ADVISORY` findings and Design Decisions entries never need human attention — that is what makes them `ADVISORY` and not `BLOCKER` — so they stay silent in `review/round-<N>.md` and `decision-log.md`, reachable through the PR body's `<details>` pointer for anyone who wants them. After `/speq-implement-pr` records the plan, they survive only in git history, and the ready PR links them at the evidence commit. A PR comment is for something that needs the approver's eyes; nothing on this path does.
 
-**`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass — round 1's own when `HUMAN: 0`, or round 2's follow-up — came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
+**`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass (round 1's, or round 2's follow-up) came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
 
 Keep each question short: state the decision in 1-2 sentences and point to the round file for full reasoning, never paste the finding's full `Issue`/`Fix` block. The human needs enough to decide, not the reviewer's complete case file.
 
@@ -224,7 +224,7 @@ Run — operation: flag-blocked (per /speq-git-operations)
 
 ### 7. Report (orchestrator)
 
-Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced — terminal only, per step 6 neither ever reaches the PR. If step 5's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, and it fully resolved, name it in one line ("N mechanical findings fixed, no human input needed") — do not restate what each one was; that detail lives in the round file.
+Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced — terminal only, per step 6 neither ever reaches the PR. If step 5 fixed `MECHANICAL` findings and round 2 confirmed them, name it in one line ("N mechanical findings fixed and re-checked, no human input needed") — do not restate what each one was; that detail lives in the round file.
 
 ## Spec Hierarchy (reference)
 
@@ -255,5 +255,5 @@ specs/
 | A third adversarial review round | Bounded to 2 — a `MECHANICAL` remainder gets one direct fix pass instead, a `HUMAN` remainder becomes an open question |
 | Pasting a finding's full Issue/Fix text into a PR comment | State the decision in 1-2 sentences, link to `review/round-<N>.md` for the rest |
 | Escalating a `MECHANICAL` finding to the human because round 2 didn't close it | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly |
-| Running round 2 when round 1's `HUMAN` count is 0 | A round with nothing judgment-worthy left doesn't need a second adversarial pass — fix and ship |
+| Skipping round 2 after a fix pass | An unchecked fix can ship a partial resolution; a `HUMAN: 0` round 1 gets a confirm-only round 2, not none |
 | Posting `ADVISORY` findings or Design Decisions as a PR comment | They never need human attention by definition — silent in `review/round-<N>.md`/`decision-log.md`, reachable via the body's `<details>` pointer |

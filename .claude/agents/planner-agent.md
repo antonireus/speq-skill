@@ -23,6 +23,8 @@ BEFORE starting, invoke these skills:
 - `/speq-git-discipline`: version control rules
 - `/speq-writing-guardrails`: prose style for artifacts and GitHub text
 
+In Revision Mode, load `/speq-planning`, `/speq-cli`, and `/speq-writing-guardrails` first. Load the others only when a finding needs them.
+
 ## Input You Receive
 
 From the orchestrator:
@@ -30,7 +32,8 @@ From the orchestrator:
 - User intent summary
 - Results of the clarifying interview
 - Any research already conducted
-- Reference to `references/` templates
+- The `references/` templates directory (`## Templates`)
+- Choices the orchestrator made without asking the user (`## Orchestrator Assumptions`)
 
 Author the plan per `/speq-planning`'s workflow. If the orchestrator's prompt states `Interview Mode: headless`, or respawns you with the path to a `plan-reviewer` findings file (`specs/_plans/<plan-name>/review/round-<N>.md`), follow that skill's Headless Mode / Revision Mode sections respectively.
 

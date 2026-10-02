@@ -5,11 +5,13 @@ description: Query specs via the speq CLI — semantic search, feature listing, 
 
 # speq CLI
 
-The CLI is installed locally and on the path. Invoke via `speq`.
+The CLI is installed locally and on the path. Invoke via `speq` from anywhere inside the project; it finds `specs/` in the nearest parent directory.
 
 ## Search-First Rule
 
 **Never read full spec files without searching first.** Search narrows the target before you spend context budget.
+
+When you need exact markdown, such as copying a `## Background` or `# Feature` section into a `DELTA:CHANGED` block, use `speq feature get --raw` instead of reading the file.
 
 ## Command Reference
 
@@ -20,6 +22,7 @@ The CLI is installed locally and on the path. Invoke via `speq`.
 | `speq feature list <domain>` | Features in a domain |
 | `speq feature get <domain>/<feature>` | Full feature spec |
 | `speq feature get "<domain>/<feature>/<scenario>"` | Single scenario |
+| `speq feature get --raw <path>` | Exact markdown of the feature or scenario |
 | `speq search query "<query>"` | Semantic search |
 | `speq feature validate` | Validate all specs |
 | `speq feature validate <domain>/<feature>` | Validate single feature |

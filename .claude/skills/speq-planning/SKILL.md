@@ -43,10 +43,10 @@ Output: specs/_plans/<plan-name>/<domain>/<feature>/spec.md
 
 Every scenario requires two forms of external proof. No claims, only evidence.
 
-**Integration tests** (mandatory per scenario):
-- Map each scenario to an integration test (file path + test name)
+**Tests** (one per scenario):
+- Map each scenario to a test (file path + test name). Use an integration test by default
+- Use a unit test instead only when the scenario's behavior is pure computation with no I/O; mark it `Unit` in Scenario Coverage
 - One test per scenario by default; combine only when scenarios share setup and assertions
-- Unit tests only for pure computation with no I/O
 
 **Manual invocation** (mandatory per feature):
 - Concrete commands that invoke the built software
@@ -75,7 +75,7 @@ If two clusters would contend on one shared file, split the module per feature (
 Create `specs/_plans/<plan-name>/decision-log.md` from `/speq-plan`'s `references/decision-log-plan-template.md`.
 
 **What to capture:**
-- **Interview section**: verbatim or close paraphrase of every Q&A exchange passed from the orchestrator
+- **Interview section**: verbatim or close paraphrase of every Q&A exchange in the brief's `## Clarifying Interview Results`. Record `## Orchestrator Assumptions` entries as Design Decisions entries instead; they are not user answers
 - **Design Decisions section**: one entry per significant choice made while authoring spec deltas or plan.md (architecture patterns, rejected alternatives, scope boundaries)
 - **Review Findings section**: leave empty; populated in Revision Mode after `plan-reviewer` blockers, and by `speq-implement` after code review
 
@@ -167,8 +167,9 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 
 - Read `specs/_plans/<plan-name>/notes/planning.md` first, if present. This is your own prior-pass hand-off note. It orients you before you re-read anything else.
 - Read the BLOCKER list from the path given in the prompt: `specs/_plans/<plan-name>/review/round-<N>.md`. The findings never arrive inline; the file is the only source.
-- Address only the BLOCKER findings. Execute each one's `Fix:` line: an imperative naming the artifact, section, and concrete change. Revise exactly what it points to. Do not rewrite unrelated content. Do not act on ADVISORY findings.
+- Resolve every BLOCKER finding. Each `Fix:` line names the artifact, section, and concrete change; treat it as the reviewer's proposal, not a waiver of this skill's rules. Apply it together with the rest of this workflow, the Prose drift check included. When a `Fix:` line contradicts a rule here or in `/speq-plan`'s `references/delta-template.md`, follow the rule and say so in the `Resolved:` evidence. Leave content no finding touches as it is.
+- You MAY also fix an ADVISORY finding when it corrects a fact you can verify in the repository (a count, a path, a test name, a missing task a project rule requires) and the change stays local. Report each as `Fixed advisory: <title>: <evidence>`.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
-- Return one line per blocker you addressed: `Resolved: <title> — <evidence>` or `Could not resolve: <title> — <why>`. The orchestrator uses this to decide whether a further review round is needed — do not omit it, even when every finding resolved cleanly.
+- Return one line per blocker you addressed: `Resolved: <title>: <evidence>` or `Could not resolve: <title>: <why>`. The orchestrator uses these lines to decide the next step, so include them even when every finding resolved cleanly.
 - If resolving a blocker surfaces a genuinely irreducible new decision, escalate it exactly as during initial planning (interactive: signal back with a concrete question; headless: `OPEN QUESTIONS:` sentinel).
