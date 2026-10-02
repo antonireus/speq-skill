@@ -29,7 +29,7 @@ From the orchestrator: the fragment directory (`specs/_decision/`) and the instr
 
 ## Promotion Gate
 
-An ADR belongs in the permanent record only when it records a change in behavior, architecture, or design that binds future work. The authoritative text is the "Promotion gate" in `/speq-planning`. Judge with these tags:
+An ADR belongs in the permanent record only when it records an architecture or design constraint that binds future work and no scenario can express, or a reversal of an earlier ADR. The authoritative text is the "Promotion gate" in `/speq-planning`. Judge with these tags:
 
 | Verdict | Meaning |
 |---------|---------|
@@ -37,7 +37,7 @@ An ADR belongs in the permanent record only when it records a change in behavior
 | `NOISE-PROCESS` | A procedural or workflow decision (where a note lives, how a plan organizes its scratch state, a review-loop or tooling workaround) with no project-wide rule that binds every future plan |
 | `NOISE-LOCAL` | A local design choice, scope trim, or implementation detail. Test: a contributor who never read this ADR would not break a rule of the system |
 | `NOISE-COROLLARY` | Follows from another ADR. Name it in `Parent`. Its content belongs in the parent's `### Consequences` |
-| `NOISE-DUPLICATE` | Restates another ADR or a feature-spec scenario and adds no rationale. Name where the statement lives in `Parent` |
+| `NOISE-DUPLICATE` | Restates another ADR, or records behavior a feature-spec scenario specifies without reversing an earlier ADR. Name where the statement lives in `Parent` |
 | `STALE` | Passes the gate, but a claim contradicts the current code or specs. Give `file:line` evidence |
 | `UNSURE` | You cannot tell. State the question |
 

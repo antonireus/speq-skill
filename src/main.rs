@@ -7,6 +7,20 @@ use speq_skill::{cli, feature, plan, record, search, tree, validate};
 fn main() -> ExitCode {
     let cli = cli::Cli::parse();
 
+    // Every command reads paths relative to the project root, so run from there.
+    let cwd = std::env::current_dir().unwrap_or_else(|_| PathBuf::from("."));
+    let Some(root) = feature::find_project_root(&cwd) else {
+        println!(
+            "No specs/ directory found in {} or any parent directory.",
+            cwd.display()
+        );
+        return ExitCode::from(1);
+    };
+    if let Err(e) = std::env::set_current_dir(&root) {
+        println!("Cannot change to project root {}: {}", root.display(), e);
+        return ExitCode::from(1);
+    }
+
     match cli.command {
         cli::Commands::Domain { command } => handle_domain_command(command),
         cli::Commands::Feature { command } => handle_feature_command(command),
@@ -45,9 +59,9 @@ fn handle_search_command(command: cli::SearchCommands) -> ExitCode {
                                 "{}/{}/{} (score: {:.3})",
                                 result.domain, result.feature, result.scenario, result.score
                             );
-                            // Show first line of content as snippet
-                            if let Some(first_line) = result.content.lines().next() {
-                                println!("  {}", first_line);
+                            // The first content line repeats the scenario name; show the first step.
+                            if let Some(first_step) = result.content.lines().nth(1) {
+                                println!("  {}", first_step);
                             }
                             println!();
                         }
@@ -63,8 +77,9 @@ fn handle_search_command(command: cli::SearchCommands) -> ExitCode {
     }
 }
 
-fn print_spec_warnings(warnings: &[plan::SpecValidationResult]) {
-    if warnings.is_empty() {
+fn print_spec_warnings(result: &plan::PlanValidationResult) {
+    let warnings = &result.spec_validation_warnings;
+    if warnings.is_empty() && result.delta_warnings.is_empty() {
         return;
     }
     println!();
@@ -74,6 +89,9 @@ fn print_spec_warnings(warnings: &[plan::SpecValidationResult]) {
         for warning in &spec_result.warnings {
             println!("    WARN: {}", warning);
         }
+    }
+    for warning in &result.delta_warnings {
+        println!("  WARN: {}", warning);
     }
 }
 
@@ -105,7 +123,7 @@ fn handle_plan_command(command: cli::PlanCommands) -> ExitCode {
                         }
                     }
 
-                    print_spec_warnings(&result.spec_validation_warnings);
+                    print_spec_warnings(&result);
                     for warn in &result.decision_log_warnings {
                         println!("  WARN (decision-log.md): {}", warn);
                     }
@@ -135,7 +153,7 @@ fn handle_plan_command(command: cli::PlanCommands) -> ExitCode {
                         }
                     }
 
-                    print_spec_warnings(&result.spec_validation_warnings);
+                    print_spec_warnings(&result);
                     ExitCode::from(1)
                 }
             }
@@ -165,7 +183,7 @@ fn handle_domain_command(command: cli::DomainCommands) -> ExitCode {
     }
 }
 
-fn handle_feature_get(base: &std::path::Path, path: &str) -> ExitCode {
+fn handle_feature_get(base: &std::path::Path, path: &str, raw: bool) -> ExitCode {
     // Parse path: domain/feature or domain/feature/scenario
     let parts: Vec<&str> = path.splitn(3, '/').collect();
 
@@ -193,6 +211,10 @@ fn handle_feature_get(base: &std::path::Path, path: &str) -> ExitCode {
             return ExitCode::from(1);
         }
     };
+
+    if raw {
+        return print_raw_feature(&content, domain, feature_name, scenario_name);
+    }
 
     let parsed = match validate::parser::parse(&content) {
         Ok(p) => p,
@@ -233,6 +255,14 @@ fn handle_feature_get(base: &std::path::Path, path: &str) -> ExitCode {
             println!("{}", desc);
             println!();
         }
+        if !parsed.spec.background.is_empty() {
+            println!("## Background");
+            println!();
+            for item in &parsed.spec.background {
+                println!("  * {}", item);
+            }
+            println!();
+        }
         for scenario in &parsed.spec.scenarios {
             println!("### {}", scenario.name);
             println!();
@@ -245,11 +275,37 @@ fn handle_feature_get(base: &std::path::Path, path: &str) -> ExitCode {
     }
 }
 
+fn print_raw_feature(
+    content: &str,
+    domain: &str,
+    feature_name: &str,
+    scenario_name: Option<&str>,
+) -> ExitCode {
+    let Some(scenario_name) = scenario_name else {
+        print!("{}", content);
+        return ExitCode::SUCCESS;
+    };
+    let anchor = record::DeltaAnchor::Scenario(scenario_name.to_string());
+    match record::section_markdown(content, &anchor) {
+        Some(section) => {
+            println!("{}", section);
+            ExitCode::SUCCESS
+        }
+        None => {
+            println!(
+                "Scenario '{}' not found in {}/{}",
+                scenario_name, domain, feature_name
+            );
+            ExitCode::from(1)
+        }
+    }
+}
+
 fn handle_feature_command(command: cli::FeatureCommands) -> ExitCode {
     let base = PathBuf::from("specs");
 
     match command {
-        cli::FeatureCommands::Get { path } => handle_feature_get(&base, &path),
+        cli::FeatureCommands::Get { path, raw } => handle_feature_get(&base, &path, raw),
 
         cli::FeatureCommands::List { domain } => {
             if let Some(domain) = domain {

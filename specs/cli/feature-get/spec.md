@@ -4,9 +4,10 @@ The CLI SHALL provide a command to retrieve and display a feature specification 
 
 ## Background
 
-* Command syntax: `speq feature get <path>`
+* Command syntax: `speq feature get [--raw] <path>`
 * Path format: `<domain>/<feature>` for full spec, `<domain>/<feature>/<scenario>` for single scenario
-* Output is formatted text (not raw markdown)
+* Output is formatted text by default; `--raw` prints the exact markdown from `spec.md`
+* Formatted output keeps inline code spans, with their backticks
 * Exit code 0 on success, 1 on error
 
 ## Scenarios
@@ -17,8 +18,8 @@ The CLI SHALL provide a command to retrieve and display a feature specification 
 * *WHEN* the user runs `speq feature get cli/validate`
 * *THEN* the system SHALL display the feature name as a heading
 * *AND* the system SHALL display the feature description
+* *AND* the system SHALL display the Background items
 * *AND* the system SHALL display all scenarios with their steps
-* *AND* the system SHALL exit with code 0
 
 ### Scenario: Get single scenario
 
@@ -43,6 +44,27 @@ The CLI SHALL provide a command to retrieve and display a feature specification 
 * *WHEN* the user runs `speq feature get cli/validate/Missing`
 * *THEN* the system SHALL display an error message "Scenario 'Missing' not found in cli/validate"
 * *AND* the system SHALL exit with code 1
+
+### Scenario: Formatted output keeps inline code
+
+* *GIVEN* a feature spec whose description, Background, and steps contain inline code such as `exasol://host:port`
+* *WHEN* the user runs `speq feature get <domain>/<feature>`
+* *THEN* the system SHALL display each inline code span with its backticks
+* *AND* the system SHALL display the description apart from the Background
+
+### Scenario: Get raw feature markdown
+
+* *GIVEN* a feature spec exists at `cli/validate/spec.md`
+* *WHEN* the user runs `speq feature get --raw cli/validate`
+* *THEN* the system SHALL print the content of `cli/validate/spec.md` unchanged
+* *AND* the system SHALL exit with code 0
+
+### Scenario: Get raw scenario markdown
+
+* *GIVEN* a feature spec at `cli/validate/spec.md` contains scenario "Basic test"
+* *WHEN* the user runs `speq feature get --raw "cli/validate/Basic test"`
+* *THEN* the system SHALL print the `### Scenario: Basic test` section unchanged, heading included
+* *AND* the system SHALL NOT print any other section
 
 ### Scenario: Display step formatting
 

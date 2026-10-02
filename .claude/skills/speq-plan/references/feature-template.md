@@ -16,6 +16,12 @@
 * *THEN* <expected outcome with RFC 2119 keyword>
 * *AND* <additional outcome if needed>
 
+## Scenario Shape
+
+- One case per scenario. Write either/or inputs or outcomes as separate scenarios.
+- One condition or assertion per step. Do not merge several into one compound step.
+- `speq plan validate` warns when a scenario has more than 3 AND steps after its THEN step. Fix the warning by splitting the scenario, never by merging or dropping steps.
+
 ## Example
 
 ```markdown

@@ -95,10 +95,10 @@ speq search query "<relevant terms>"
 
 ### 4. Delegate to planner-agent
 
-Same shape `speq-plan` uses, with headless framing added:
+Write the brief once, to `specs/_plans/<plan-name>/notes/brief.md` (create `notes/` if absent). Every sub-agent reads this one file. `notes/` is local scratch, kept out of every commit.
 
 ```
-Delegate to planner-agent — Plan <plan-name> (headless)
+# Brief: <plan-name>
 
 ## Plan Name
 <plan-name>
@@ -120,11 +120,20 @@ none — agent to research as needed
 
 ## Project Hook
 <if active: note ".speq/plan-pr-hook.md — read it and apply it" — otherwise omit this section>
+```
+
+Then spawn the planner with a short prompt:
+
+```
+Delegate to planner-agent — Plan <plan-name> (headless)
+
+Brief: specs/_plans/<plan-name>/notes/brief.md
+Interview Mode: headless
 
 ## Your Task
 Produce spec deltas and plan.md per your normal workflow. You are in headless mode: follow your "Headless / Non-Interactive Mode" section — assume and document conventional decisions, escalate only irreducible ones via the OPEN QUESTIONS: sentinel. Tag deep-reasoning tasks with [expert].
 
-Return the list of files created and the validation result, or an OPEN QUESTIONS: block if you had to stop.
+Return the list of files created, the validation result, and a `Deviations from brief:` line, or an OPEN QUESTIONS: block if you had to stop.
 ```
 
 ### 5. Adversarial Plan Review
@@ -134,38 +143,38 @@ Skip this step if step 4 returned `OPEN QUESTIONS:`; step 6 handles that. Otherw
 ```
 Delegate to plan-reviewer — Review <plan-name> (round 1)
 
-## Plan Name
-<plan-name>
-
-## User Intent
-<the feature intent text / resume Q&A used in step 4>
-
-## Clarifying Interview Results
-<same text passed to planner-agent in step 4 — headless mode has no live interview>
-
-## Plan Artifacts
-plan.md, decision-log.md, and every specs/_plans/<plan-name>/**/spec.md delta
-
-## Project Hook
-<if active: note ".speq/plan-pr-hook.md — read it and apply it" — otherwise omit this section>
+Brief: specs/_plans/<plan-name>/notes/brief.md
+Planning note: specs/_plans/<plan-name>/notes/planning.md
+Plan Artifacts: plan.md, decision-log.md, and every specs/_plans/<plan-name>/**/spec.md delta
+Planner deviations: <the planner's `Deviations from brief:` line, or "none">
 ```
 
 It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and returns only `PLAN REVIEW round 1: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> — <path>`. `INTENT` counts the BLOCKERs on the Intent Fidelity axis alone; `HUMAN` counts every BLOCKER tagged `Escalation: HUMAN` (Intent Fidelity included) per `/speq-plan-review`'s Escalation Class section — the rest are `MECHANICAL`.
 
 **If `INTENT > 0`:** the plan solves a different problem than the one asked. Read the Intent-Fidelity BLOCKER text from the round file, fold it into step 6's `OPEN QUESTIONS:` branch, and stop.
 
-**Plan Size classification** (compute before respawning `plan-reviewer` for round 2): the plan is `small` when all three hold — the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty. Otherwise `full`.
+**Round 2 Scope** (compute before respawning `plan-reviewer` for round 2): `confirm-only` when either of these holds:
+- round 1's `HUMAN` count was 0. This alone is enough; plan size does not matter.
+- the plan is small, meaning all three hold: the plan-name's verb (per the verb table) is `fix`; `plan.md` has no `## Design` section; `decision-log.md`'s `## Design Decisions` section is empty.
 
-**If `INTENT == 0` and BLOCKER findings exist:** respawn `planner-agent` with the path to `review/round-1.md`. Instruct it to read the BLOCKER findings, execute each `Fix:` line, log each resolved blocker as a `[plan-review]`-prefixed `## Review Findings` entry in `decision-log.md`, re-validate, and return its per-finding `Resolved:`/`Could not resolve:` report per `/speq-planning`'s Revision Mode.
+`full` when neither holds.
 
-**Round 2 runs only if round 1's `HUMAN` count was greater than 0.** A round 1 with `HUMAN: 0` means every BLOCKER was `MECHANICAL` — the reviewer already judged none of them needed adversarial re-checking, only a fix. Skip straight to the ship decision below; do not respawn `plan-reviewer`.
+**If `INTENT == 0` and BLOCKER findings exist:** respawn `planner-agent` with exactly this message, and nothing more. `/speq-planning`'s Revision Mode defines what it does with the file. Do not paraphrase findings or settle an open choice yourself:
 
-- **`HUMAN > 0`:** respawn `plan-reviewer` for round 2 with the path to `review/round-1.md` plus the computed `Plan Size: small | full` field, to confirm resolution (or, on `small`, confirm and stop there). Do not run a third adversarial review round.
-  - **BLOCKERs remaining after round 2, split by `Escalation`:** a `MECHANICAL` remainder gets one more direct pass — respawn `planner-agent` with the path to `review/round-2.md` and the still-open `MECHANICAL` findings; same Revision Mode format, no further `plan-reviewer` round (correctness here is checkable, not adjudicated). A `HUMAN` remainder folds into step 6's `OPEN QUESTIONS:` branch as the questions list.
+```
+Revision Mode — <plan-name>
+Findings file: specs/_plans/<plan-name>/review/round-<N>.md
+Scope: <BLOCKERs | still-open MECHANICAL findings>
+```
 
-**Ship decision, whichever path produced the final fix pass** (round 1 alone when `HUMAN: 0`, or the round-2 `MECHANICAL` follow-up above): clean only if `speq plan validate` passed AND every finding came back `Resolved:`. Any `Could not resolve:` line, or a failed re-validate, is not a clean return — fold that finding into `OPEN QUESTIONS:` too, with its `Could not resolve:` reason as the question text. A `MECHANICAL` tag means the reviewer judged it not to need human judgment; it does not guarantee a fix exists on the first retry, and this is not the place to find out by shipping it silently.
+**Round 2 runs whenever round 1 raised a BLOCKER.** `MECHANICAL` means no human is needed to decide the fix, not that the fix needs no check: a fix can be partial or can contradict a `/speq-planning` rule.
 
-**ADVISORY findings:** carry into step 7's terminal report only — never a PR comment or body content, per step 6. Read from the last round file that actually ran — round 1's, if round 2 was skipped entirely (`HUMAN: 0`) or ran confirm-only (`Plan Size: small`); round 2's otherwise. Never block or persist them.
+- Respawn `plan-reviewer` for round 2 with the brief and planning-note paths, the path to `review/round-1.md`, plus the computed `Round 2 Scope: confirm-only | full` field, to confirm resolution (or, on `confirm-only`, confirm and stop there). Do not run a third adversarial review round.
+  - **BLOCKERs remaining after round 2, split by `Escalation`:** a `MECHANICAL` remainder gets one more direct pass — respawn `planner-agent` with the revision message pointing at `review/round-2.md`, scope `still-open MECHANICAL findings`, no further `plan-reviewer` round (correctness here is checkable, not adjudicated). A `HUMAN` remainder folds into step 6's `OPEN QUESTIONS:` branch as the questions list.
+
+**Ship decision, whichever path produced the final fix pass** (round 1's fix pass confirmed by round 2, or the round-2 `MECHANICAL` follow-up above): clean only if `speq plan validate` passed AND every finding came back `Resolved:`. Any `Could not resolve:` line, or a failed re-validate, is not a clean return — fold that finding into `OPEN QUESTIONS:` too, with its `Could not resolve:` reason as the question text. A `MECHANICAL` tag means the reviewer judged it not to need human judgment; it does not guarantee a fix exists on the first retry, and this is not the place to find out by shipping it silently.
+
+**ADVISORY findings:** carry into step 7's terminal report only — never a PR comment or body content, per step 6. Read from the last round file that ran a full pass: round 1's if round 2 ran confirm-only, round 2's otherwise. Never block or persist them.
 
 ### 6. Branch on the Result
 
@@ -194,7 +203,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 
 No comment on a clean return. `ADVISORY` findings and Design Decisions entries never need human attention — that is what makes them `ADVISORY` and not `BLOCKER` — so they stay silent in `review/round-<N>.md` and `decision-log.md`, reachable through the PR body's `<details>` pointer for anyone who wants them. After `/speq-implement-pr` records the plan, they survive only in git history, and the ready PR links them at the evidence commit. A PR comment is for something that needs the approver's eyes; nothing on this path does.
 
-**`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass — round 1's own when `HUMAN: 0`, or round 2's follow-up — came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
+**`OPEN QUESTIONS:` returned** (from step 4, or from step 5's round-1 Intent gate, unresolved `HUMAN` round-2 BLOCKERs, or a `MECHANICAL` finding that a fix pass (round 1's, or round 2's follow-up) came back `Could not resolve:` on): persist the partial plan and ask the human async. Author the status files yourself, then delegate only git operations.
 
 Keep each question short: state the decision in 1-2 sentences and point to the round file for full reasoning, never paste the finding's full `Issue`/`Fix` block. The human needs enough to decide, not the reviewer's complete case file.
 
@@ -224,7 +233,7 @@ Run — operation: flag-blocked (per /speq-git-operations)
 
 ### 7. Report (orchestrator)
 
-Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced — terminal only, per step 6 neither ever reaches the PR. If step 5's round 1 was all-`MECHANICAL` (round 2 skipped) or ran a round-2 `MECHANICAL` follow-up, and it fully resolved, name it in one line ("N mechanical findings fixed, no human input needed") — do not restate what each one was; that detail lives in the round file.
+Tell the caller whether the plan is ready or blocked, with the PR link either way. Print plan.md's `## Impact` section to the terminal. Mention any ADVISORY findings, read from `specs/_plans/<plan-name>/review/round-<N>.md`, not from memory, and any Design Decisions entries surfaced — terminal only, per step 6 neither ever reaches the PR. If step 5 fixed `MECHANICAL` findings and round 2 confirmed them, name it in one line ("N mechanical findings fixed and re-checked, no human input needed") — do not restate what each one was; that detail lives in the round file.
 
 ## Spec Hierarchy (reference)
 
@@ -255,5 +264,5 @@ specs/
 | A third adversarial review round | Bounded to 2 — a `MECHANICAL` remainder gets one direct fix pass instead, a `HUMAN` remainder becomes an open question |
 | Pasting a finding's full Issue/Fix text into a PR comment | State the decision in 1-2 sentences, link to `review/round-<N>.md` for the rest |
 | Escalating a `MECHANICAL` finding to the human because round 2 didn't close it | Round count is not the escalation test — `Escalation: HUMAN` is; fix mechanical findings directly |
-| Running round 2 when round 1's `HUMAN` count is 0 | A round with nothing judgment-worthy left doesn't need a second adversarial pass — fix and ship |
+| Skipping round 2 after a fix pass | An unchecked fix can ship a partial resolution; a `HUMAN: 0` round 1 gets a confirm-only round 2, not none |
 | Posting `ADVISORY` findings or Design Decisions as a PR comment | They never need human attention by definition — silent in `review/round-<N>.md`/`decision-log.md`, reachable via the body's `<details>` pointer |

@@ -11,14 +11,14 @@ Build the case against approval, not for it.
 
 **Premortem first.** Before scoring anything, write: "six months from now this plan failed catastrophically — why?" Produce 2-3 concrete failure stories. Route each into the taxonomy below. A failure story with no matching category means the taxonomy misses a category, not that the story does not count.
 
-**No silent pass.** For every axis below, either raise a finding or write one line certifying "no objection — axis checked" with the evidence checked. Never skip an axis.
+**No silent pass.** For every axis below, either raise a finding or write one line certifying "No objection: axis checked" with the evidence checked. Never skip an axis.
 
-**Round 2 (if applicable):** first re-check every round-1 BLOCKER against the revised artifacts and the `[plan-review]` entries in `decision-log.md`. Confirm each is resolved, not reworded, listing each as `Resolved:` or `Not resolved:` per the output template.
+**Round 2 (if applicable):** first re-check every round-1 BLOCKER against the revised artifacts and the `[plan-review]` entries in `decision-log.md`. Confirm each is resolved, not reworded, listing each as `Resolved:` or `Not resolved:` per the output template. Judge the defect, not the `Fix:` line: re-read the conflicting text in every artifact the finding names, plus the Background and description of each feature it touches. A fix that followed the `Fix:` line but leaves part of the conflict in place is `Not resolved:`.
 
-- **`Plan Size: full`** (the orchestrator's default when it omits the field): then do a fresh pass for new findings, across all six axes, same as round 1.
-- **`Plan Size: small`**: skip the fresh pass. The findings document holds only `## Summary` and `## Round-1 Blocker Recheck` — no axis sections. The orchestrator classifies the plan as `small` from artifacts already on disk (`fix`-verb plan name, no `## Design` section in `plan.md`, empty `## Design Decisions` in `decision-log.md`) and passes it as an explicit `Plan Size:` field in the round-2 respawn prompt.
+- **`Round 2 Scope: full`** (the orchestrator's default when it omits the field): then do a fresh pass for new findings, across all six axes, same as round 1.
+- **`Round 2 Scope: confirm-only`**: skip the fresh pass. The findings document holds only `## Summary` and `## Round-1 Blocker Recheck`, no axis sections. The orchestrator picks this scope when round 1 raised no `HUMAN` BLOCKER, or when the plan is small, and passes it as an explicit field in the round-2 respawn prompt.
 
-**Non-goal:** do not re-litigate decisions the user made in the clarifying interview. Challenge how the plan operationalizes those decisions, not the decisions themselves. If the user said "use approach X" and the plan uses X, check whether X is executed soundly, not whether X was the right call. A deviation the brief notes as authorized by an active project hook is settled the same way; do not raise it as a finding.
+**Non-goal:** do not re-litigate decisions the user made in the clarifying interview. Only the brief's `## Clarifying Interview Results` count as user decisions. Entries under `## Orchestrator Assumptions`, and any `decision-log.md` `## Interview` entry with no matching question in the brief, are open to challenge. Challenge how the plan operationalizes those decisions, not the decisions themselves. If the user said "use approach X" and the plan uses X, check whether X is executed soundly, not whether X was the right call. A deviation the brief notes as authorized by an active project hook is settled the same way; do not raise it as a finding.
 
 ## Challenge Taxonomy
 
@@ -41,7 +41,7 @@ Tag every finding. Group findings by axis in the output.
 
 - `[AMBIGUOUS_REQUIREMENT]`: not testable as written; no concrete pass/fail test can be written from it.
 - `[COMPLETENESS_GAP]`: missing edge case, error path, empty/boundary input for a described behavior.
-- `[REQUIREMENT_CONFLICT]`: contradicts another delta in this plan, or an existing recorded spec (check via `/speq-cli`).
+- `[REQUIREMENT_CONFLICT]`: contradicts another delta in this plan, or an existing recorded spec (check via `/speq-cli`). For each existing feature a delta changes, run `speq feature get --raw <domain>/<feature>` and check its Background, description, and every recorded scenario against the new scenarios. A contradiction with no `DELTA:CHANGED` block is the Prose drift check in `/speq-planning`, workflow step 2.
 - `[IMPLEMENTATION_LEAKAGE]`: a spec delta's `## Background` or `# Feature <name>` description states a fact that no scenario's GIVEN/WHEN/THEN step in the same spec depends on. For a delta on an existing feature, the scenarios are those of the target spec after the delta merges; for a NEW feature, they are the delta file's own scenarios. A Background line that only restates a THEN step is redundant, not leakage — don't flag it. Fix: drop the Background line, or move it into the scenario step that actually needs it.
 
 ### Task breakdown: is the WBS correct and appropriately scoped?
@@ -58,7 +58,7 @@ Tag every finding. Group findings by axis in the output.
 - `[INFORMATION_LEAKAGE]`: a design decision (format, protocol, temporal split) reflected across multiple planned modules.
 - `[TACTICAL_SHORTCUT]`: a tactical shortcut with no scheduled strategic follow-up.
 - `[BOUNDARY_VIOLATION]`: planned business logic depends directly on a delivery mechanism, storage engine, or framework.
-- `[ADR_OVERPROMOTION]`: a `Promotes to ADR: yes` entry that fails the promotion gate (per `/speq-planning` §5): promotion requires a change in behavior, architecture, or design; procedural/workflow decisions default to `no`, overridden only by a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision, with the override stated explicitly in the entry's Rationale. Fix: set it to `no`, or, if it's a corollary of another promoted decision, fold it into that parent entry's `Consequences` line.
+- `[ADR_OVERPROMOTION]`: a `Promotes to ADR: yes` entry that fails the promotion gate (per `/speq-planning` §5): promotion requires an architecture or design constraint that binds future work and no scenario can express, or a reversal of a decision recorded in `specs/_decision/`; behavior the plan's scenarios specify, a fix that removes an unsafe default included, stays `no`; procedural/workflow decisions default to `no`, overridden only by a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision, with the override stated explicitly in the entry's Rationale. Fix: set it to `no`, or, if it's a corollary of another promoted decision, fold it into that parent entry's `Consequences` line.
 
 ### Prose quality: does the writing meet `/speq-writing-guardrails`?
 
@@ -69,22 +69,23 @@ Prose findings default to **ADVISORY**: style, not correctness. Escalate a `[PRO
 
 ## Severity
 
-- **BLOCKER**: violates user intent, or the plan is infeasible/untestable as written, or breaks a project rule the skill system enforces (the promotion gate, the Background rule). Gates the plan; the orchestrator loops it back to `planner-agent`.
+- **BLOCKER**: violates user intent, or the plan is infeasible/untestable as written, or breaks a project rule: one the skill system enforces (the promotion gate, `[IMPLEMENTATION_LEAKAGE]`, the Prose drift check) or one the target repository's `CLAUDE.md`/`AGENTS.md` states (for example, a required CHANGELOG entry). Gates the plan; the orchestrator loops it back to `planner-agent`.
 - **ADVISORY**: a real risk, tolerable if the human acknowledges it. Never blocks; surfaced in the orchestrator's final report only.
+
+In an interactive brief (no `## Interview Mode` section), a finding whose fix needs a user-owned decision the brief does not settle is always a BLOCKER tagged `Escalation: HUMAN`, however small it looks. That includes an `## Orchestrator Assumptions` entry with no verbatim quote that states the choice, and a user-visible consequence of a specified approach that its source does not state. `/speq-plan`'s `references/user-owned-decisions.md` defines both. Never rate such a finding ADVISORY: an advisory never reaches the user as a question.
 
 ## Escalation Class (BLOCKER only)
 
-Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL`. This decides two things downstream, both in the orchestrator: whether round 2 runs at all (only if round 1 raised a `HUMAN` finding — an all-`MECHANICAL` round 1 skips straight to a fix-and-validate pass and ships), and what happens if a finding is still open once review is done: `HUMAN` findings reach the user (via `AskUserQuestion` or an `OPEN QUESTIONS:` PR comment); `MECHANICAL` ones get one direct fix from `planner-agent`, no further review round, no human interruption unless that fix itself fails.
+Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL`. This decides two things downstream, both in the orchestrator: how much round 2 checks (an all-`MECHANICAL` round 1 gets a confirm-only round 2 after the fix pass; a `HUMAN` finding gets a full round 2), and what happens if a finding is still open once review is done: `HUMAN` findings reach the user (via `AskUserQuestion` or an `OPEN QUESTIONS:` PR comment); `MECHANICAL` ones get one direct fix from `planner-agent`, no further review round, no human interruption unless that fix itself fails.
 
-`HUMAN` — same bar as `/speq-planning`'s headless escalation rule, applied here to a review finding instead of a planning choice:
-- Irreversible, or changes what the feature does for a user
-- Genuinely incompatible architectural designs with no clear winner
-- Security or compliance consequence
-- A load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies)
+`HUMAN`: the fix needs a judgment only the requester can make. The bar depends on the brief's mode, using the same rules `/speq-planning` gives the planner:
+- **Interactive brief** (no `## Interview Mode` section): the fix needs a user-owned decision, per `/speq-plan`'s `references/user-owned-decisions.md`, that the brief does not settle.
+- **Headless brief** (`## Interview Mode` is `headless`): the fix needs a decision `/speq-planning`'s Headless Mode would escalate: irreversible, a change to what the feature does for a user, genuinely incompatible architectural designs with no clear winner, or a security or compliance consequence.
+- **Both modes:** a load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies).
 
 A fact any of the plan's own artifacts, the codebase, or the recorded spec library *can* settle is `MECHANICAL`, however tedious checking it is — checking is not judgment. Don't stretch the fourth bullet to cover it: a stale test-name citation, a scenario that contradicts another scenario, or a tooling gap the plan's own text already describes are all things `plan-reviewer` can verify itself, not things it must ask about.
 
-`MECHANICAL` — default. Anything resolvable by reading the plan's own artifacts, no external judgment call needed: a spec delta that contradicts another delta or a recorded spec, a citation that doesn't match the real test suite, a missing delta for a location the plan itself says changed, an inconsistent task placement, an unimplementable tooling reference, an assumption the plan can verify against the codebase itself (add the verification as the `Fix:`, don't escalate the question). Every Intent Fidelity BLOCKER is `HUMAN` by definition — a substituted or dropped ask is never something the reviewer resolves unilaterally.
+`MECHANICAL` — default. Anything resolvable by reading the plan's own artifacts, no external judgment call needed: a spec delta that contradicts another delta or a recorded spec, a citation that doesn't match the real test suite, a missing delta for a location the plan itself says changed, an inconsistent task placement, an unimplementable tooling reference, an assumption the plan can verify against the codebase itself (add the verification as the `Fix:`, don't escalate the question). A `MECHANICAL` fix still gets a confirm-only recheck in round 2. Every Intent Fidelity BLOCKER is `HUMAN` by definition — a substituted or dropped ask is never something the reviewer resolves unilaterally.
 
 Justify `HUMAN` in the finding's `Issue:` line. Don't default to `HUMAN` because a finding is hard to fix; default to `MECHANICAL` unless it actually requires a judgment call only the requester can make.
 
@@ -98,7 +99,7 @@ PLAN REVIEW round <N>: BLOCKERS: <n>, ADVISORY: <n>, INTENT: <n>, HUMAN: <n> —
 
 `INTENT` counts the Intent Fidelity BLOCKERs alone: a subset of `BLOCKERS`, matching the document's Summary block per the template's rules. `HUMAN` counts every BLOCKER tagged `Escalation: HUMAN` (Intent Fidelity BLOCKERs included — they are always `HUMAN`); the rest of `BLOCKERS` are `MECHANICAL` and derivable as `BLOCKERS - HUMAN`.
 
-When round 2 ran confirm-only (`Plan Size: small`), append ` [confirm-only]` right after the round number, so the orchestrator's report can name which mode ran:
+When round 2 ran confirm-only (`Round 2 Scope: confirm-only`), append ` [confirm-only]` right after the round number, so the orchestrator's report can name which mode ran:
 
 ```
 PLAN REVIEW round 2 [confirm-only]: BLOCKERS: <n>, ADVISORY: 0, INTENT: <n>, HUMAN: <n> — specs/_plans/<plan-name>/review/round-2.md
@@ -108,4 +109,4 @@ PLAN REVIEW round 2 [confirm-only]: BLOCKERS: <n>, ADVISORY: 0, INTENT: <n>, HUM
 
 Never return the findings themselves as response text. `planner-agent` reads them from the file.
 
-Every finding needs a location and a concrete `Fix:` imperative; vague objections are not actionable for the revision loop. On round 2, confirm-or-refute each round-1 BLOCKER by name before raising anything new.
+Every finding needs a location and a concrete `Fix:` imperative; vague objections are not actionable for the revision loop. A `Fix:` must satisfy `/speq-planning` and `/speq-plan`'s `references/delta-template.md`. When a fix changes a scenario of an existing feature, name the Background or description delta the Prose drift check requires; never tell the planner to leave that prose unedited. A claim about what `speq record` merges must match the delta template: marked `DELTA:CHANGED` Background and description blocks are merged, and only unmarked content is ignored. On round 2, confirm-or-refute each round-1 BLOCKER by name before raising anything new.

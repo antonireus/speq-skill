@@ -97,6 +97,10 @@ pub enum FeatureCommands {
     Get {
         /// Path: domain/feature or domain/feature/scenario
         path: String,
+
+        /// Print the exact markdown from spec.md instead of formatted text
+        #[arg(long)]
+        raw: bool,
     },
 
     /// List all features or features in a domain

@@ -1,6 +1,6 @@
 ---
 name: speq-planning
-description: Plan-authoring workflow — spec delta authoring, test mapping, plan.md/decision-log.md generation, expert-task tagging, headless escalation, and revision mode. Triggered by planner-agent.
+description: Plan-authoring workflow — spec delta authoring, test mapping, plan.md/decision-log.md generation, expert-task tagging, user-owned decisions and their escalation, headless mode, and revision mode. Triggered by planner-agent.
 ---
 
 # Plan Authoring
@@ -37,16 +37,17 @@ specs/<domain>/<feature>/spec.md exists?
 Output: specs/_plans/<plan-name>/<domain>/<feature>/spec.md
 ```
 
-**Prose drift check**: after drafting a scenario delta for an existing feature, re-read that feature's `## Background` and `# Feature: <name>` description (`speq feature get <domain>/<feature>`). When the scenario change makes either inaccurate, author a `DELTA:CHANGED` block for that section too, per `/speq-plan`'s `references/delta-template.md`.
+**Prose drift check**: after drafting a scenario delta for an existing feature, re-read that feature's `## Background`, its `# Feature: <name>` description, and its other recorded scenarios (`speq feature get <domain>/<feature>`). When the scenario change makes any of them inaccurate, author a `DELTA:CHANGED` block for it too, per `/speq-plan`'s `references/delta-template.md`.
 
 ### 3. Test Mapping and Verification
 
 Every scenario requires two forms of external proof. No claims, only evidence.
 
-**Integration tests** (mandatory per scenario):
-- Map each scenario to an integration test (file path + test name)
+**Tests** (one per scenario):
+- Map each scenario to a test (file path + test name). Use an integration test by default
+- Use a unit test instead only when the scenario's behavior is pure computation with no I/O; mark it `Unit` in Scenario Coverage
 - One test per scenario by default; combine only when scenarios share setup and assertions
-- Unit tests only for pure computation with no I/O
+- Confirm a Checklist command actually compiles and runs each mapped test: check feature flags, conditional compilation, skip/ignore markers, and test targets
 
 **Manual invocation** (mandatory per feature):
 - Concrete commands that invoke the built software
@@ -75,15 +76,20 @@ If two clusters would contend on one shared file, split the module per feature (
 Create `specs/_plans/<plan-name>/decision-log.md` from `/speq-plan`'s `references/decision-log-plan-template.md`.
 
 **What to capture:**
-- **Interview section**: verbatim or close paraphrase of every Q&A exchange passed from the orchestrator
+- **Interview section**: verbatim or close paraphrase of every Q&A exchange in the brief's `## Clarifying Interview Results`. Record `## Orchestrator Assumptions` entries as Design Decisions entries instead; they are not user answers
 - **Design Decisions section**: one entry per significant choice made while authoring spec deltas or plan.md (architecture patterns, rejected alternatives, scope boundaries)
 - **Review Findings section**: leave empty; populated in Revision Mode after `plan-reviewer` blockers, and by `speq-implement` after code review
 
-**Promotion gate.** `Promotes to ADR: yes` requires a change in **behavior, architecture, or design**. Procedural and workflow decisions default to `no`. The only override: a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision — the entry's Rationale MUST state the override explicitly. A corollary of an already-promoted decision is not its own entry: record it as a bullet in that parent entry's `Consequences` line instead.
+**Promotion gate.** `Promotes to ADR: yes` requires one of:
+
+- an **architecture or design constraint** that binds future work beyond this plan and that no scenario can express (which module owns a concern, a boundary, a data format);
+- a **reversal of a decision recorded in `specs/_decision/`**. Name the superseded decision.
+
+Behavior that the plan's scenarios specify stays `no`: the spec and the CHANGELOG already record it. This includes a fix that brings behavior in line with what users would expect, such as removing an unsafe default. An alternative named in an issue or in an `Alternatives:` line does not make a decision ADR material. Procedural and workflow decisions default to `no`. The only override: a project-wide process convention that (a) binds every future plan, (b) is not scoped to just this plan, and (c) is not a corollary of another decision — the entry's Rationale MUST state the override explicitly. A corollary of an already-promoted decision is not its own entry: record it as a bullet in that parent entry's `Consequences` line instead.
 
 Set `Promotes to ADR: no` for local design choices, scope trims, and implementation details. This applies to every decision entry, Design Decisions and Review Findings alike: one ADR per genuinely new project-wide constraint, never one per entry or per resolved finding. A plan with ten Design Decisions entries or ten resolved blockers does not owe ten ADRs — most decisions in a normal plan are local (this file's structure, this feature's naming) and stay `no`. Never promote a local file-placement or process detail (where a note lives, how a plan's own scratch state is organized) just because it was deliberate enough to write down.
 
-**Review Findings entries lean further to `no`.** A `[plan-review]`-prefixed entry (Revision Mode, below) records a mistake this plan made and then corrected, not automatically a project-wide convention. Apply the same gate: promote only when the fix itself changed behavior, architecture, or design project-wide, or meets the process-convention override above — not merely because the finding was hard to resolve. Never promote a process or tooling workaround specific to this plan's own mechanics (a spec-merge gap, a review-loop correction, a task-reordering fix), or a one-off bug fix with no bearing outside this plan.
+**Review Findings entries lean further to `no`.** A `[plan-review]`-prefixed entry (Revision Mode, below) records a mistake this plan made and then corrected, not automatically a project-wide convention. Apply the same gate: promote only when the fix itself passes the gate above, or meets the process-convention override — not merely because the finding was hard to resolve. Never promote a process or tooling workaround specific to this plan's own mechanics (a spec-merge gap, a review-loop correction, a task-reordering fix), or a one-off bug fix with no bearing outside this plan.
 
 If a decision supersedes an earlier one, name the superseded decision's title in the entry. `recorder-agent` maps that title to the superseded ADR's slug at promotion.
 
@@ -113,13 +119,15 @@ If any task in a parallelization group carries the tag, the orchestrator routes 
 
 ### 7. Validate Plan
 
-Before returning:
+Before returning, and only once `plan.md` and `decision-log.md` exist (the validator reports an error while `plan.md` is missing):
 
 ```bash
 speq plan validate <plan-name>
 ```
 
-Fix any failures. Common fixes:
+Write each scenario with at most 3 AND steps from the start, so the validator has nothing to split.
+
+Fix any failures and warnings. Fix a too-many-AND-steps warning by splitting the scenario. Never merge steps into one compound step or drop a requirement step to get under the limit. Common fixes:
 - Close unclosed delta markers with `<!-- /CHANGED -->`, `<!-- /NEW -->`, `<!-- /REMOVED -->`
 - Uppercase RFC 2119 keywords
 - Fix step formatting (bold keywords: `*GIVEN*`, `*WHEN*`, `*THEN*`, `*AND*`)
@@ -139,27 +147,44 @@ This note stays out of every commit. It is local scratch, never evidence.
 
 ### 9. Pre-Return Self-Check
 
-Before you return to the orchestrator, run this checklist once against your own `plan.md`, `decision-log.md`, and spec deltas. Answer each line against the artifacts on disk, not from memory. Fix anything that answers "no" before you return.
+Before you return to the orchestrator, run this checklist once against your own `plan.md`, `decision-log.md`, and spec deltas. Answer each line against the artifacts on disk, not from memory. Fix anything that does not hold before you return.
 
 This is prevention, not the review gate. `plan-reviewer` still runs next, full-strength, unchanged.
 
-Check your artifacts do not trip `/speq-plan-review`'s finding tags, across its five non-Prose axes (Prose stays `/speq-writing-guardrails`'s job):
+- Every answer in `## Clarifying Interview Results` shows up in a scenario, a task, or a Design Decision, and nothing in the plan lacks a traceable user need.
+- Every user-owned decision the plan makes is settled by the brief. In headless mode, each one you decided yourself has a Design Decisions entry whose Rationale says so.
+- Every mapped test is compiled and run by a Checklist command (step 3).
+- For each existing feature you changed, its Background, description, and other recorded scenarios still hold, or carry a `DELTA:CHANGED` block (step 2's Prose drift check).
+- Every Background and description line you wrote states a fact some scenario step depends on, not how the code implements it.
+- Every item in `plan.md`'s Impact has a scenario, and, when the target repository keeps a CHANGELOG, an entry in the task that writes it.
+- No two scenarios in this plan contradict each other.
+- Each scenario covers one case: no either/or inputs or outcomes, and no step that merges several conditions or assertions.
+- Every spec delta has an implementing task, and every task traces to a delta or a rule in the target repository's `CLAUDE.md`/`AGENTS.md` (a CHANGELOG entry, for example).
+- Where the change touches security, performance, migration, or concurrency, a scenario or task covers it.
+- Every `Promotes to ADR: yes` entry passes the promotion gate (step 5).
 
-- **Intent Fidelity**: no `[INTENT_DRIFT]` (a substituted or reinterpreted goal), `[SCOPE_CREEP]` (untraceable extras), or `[SCOPE_REDUCTION]` (a dropped ask with no user agreement).
-- **Feasibility**: no `[EFFORT_MISESTIMATION]` (a task line that hides more work than it states), `[HIDDEN_DEPENDENCY]` (an unmodeled prerequisite), `[UNSTATED_ASSUMPTION]` (a load-bearing belief never stated), or `[NFR_IGNORED]` (security, performance, migration, or concurrency left untouched where the change touches it).
-- **Requirement Quality**: no `[AMBIGUOUS_REQUIREMENT]` (not testable as written), `[COMPLETENESS_GAP]` (a missing edge case or error path), `[REQUIREMENT_CONFLICT]` (contradicts another delta or a recorded spec — check via `/speq-cli`), or `[IMPLEMENTATION_LEAKAGE]` (a Background or Feature description fact no scenario step depends on).
-- **Task Breakdown**: no `[TRACEABILITY_GAP]` (a delta with no implementing task, or the reverse), `[TASK_GRANULARITY]` (a task too large to verify as one unit), or `[CLUSTER_INCOHERENCE]` (a Parallelization group sliced by layer, or overlapping `Knowledge` entries across groups).
-- **Design Depth** (per `/speq-design-philosophy`): no `[SHALLOW_DESIGN]`, `[INFORMATION_LEAKAGE]` (a format or protocol decision reflected across modules), `[TACTICAL_SHORTCUT]` with no scheduled follow-up, `[BOUNDARY_VIOLATION]` (business logic depending directly on a delivery mechanism, storage engine, or framework), or `[ADR_OVERPROMOTION]` (a `Promotes to ADR: yes` entry that fails the promotion gate).
+`/speq-plan-review` holds the full finding taxonomy `plan-reviewer` applies next.
 
-Open `/speq-plan-review` for a tag's full definition if you are unsure it applies.
+## User-Owned Decisions
+
+Read `/speq-plan`'s `references/user-owned-decisions.md` before you author anything. It defines which decisions the user owns and what settles one. A decision the brief settles carries a verbatim quote from its source. An `## Orchestrator Assumptions` entry without such a quote settles nothing. A user-visible consequence of a specified approach that the source does not state is not settled either, even when the approach is.
+
+Every other choice is yours. Make it, and record the significant ones under Design Decisions.
+
+What happens to a user-owned decision the brief does not settle depends on the mode:
+
+- **Interactive** (the orchestrator's prompt has no `Interview Mode` field): the user decides it, not you. Finish the code exploration first, so you return every such decision at once. Then write `notes/planning.md` (step 8) and return the escalation below before you author any artifact that depends on these decisions. The orchestrator asks the user, appends the answers to the brief, and respawns you with the same brief.
+- **Headless** (`Interview Mode: headless`): follow Headless Mode below.
+
+**Escalation format (both modes).** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list, one bullet per decision: the question, why the brief does not settle it (with a file and line when the code shows it), two to four options, and the option you recommend. Do not mix this sentinel into a normal completion report. The one exception is Revision Mode, where the `Resolved:` and `Could not resolve:` lines follow the question list.
 
 ## Headless / Non-Interactive Mode
 
-If the orchestrator's prompt states `Interview Mode: headless` (used by `speq-plan-pr`, never by the interactive `speq-plan`), there is no human to ask mid-planning. Adjust the escalation bar:
+If the orchestrator's prompt states `Interview Mode: headless` (used by `speq-plan-pr`, never by the interactive `speq-plan`), there is no human to ask mid-planning. This section replaces the interactive rule for unsettled user-owned decisions:
 
 - **Assume and document.** For conventions, naming, implementation details, and any choice with a clearly conventional default: make the call and record it as a `decision-log.md` entry (Rationale explains why this default). This is the common case; most headless plans finish without escalating.
 - **Escalate only irreducible decisions**: irreversible ones, changes to what the feature does for a user, genuinely incompatible architectural designs, or security/compliance. Before escalating, save every file completed so far (plan.md, delta specs, decision-log.md) exactly as it stands. The orchestrator persists this partial state for human review, so it must be usable as-is.
-- **Escalation format.** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list of concrete questions. Headless mode changes when to escalate, not the quality bar: same bar as the interactive path's "signal back with a concrete question". Do not mix this sentinel into a normal completion report.
+- **Escalation format.** Use the escalation format in User-Owned Decisions. Headless mode changes when to escalate, not the quality of what you escalate.
 
 ## Revision Mode
 
@@ -167,8 +192,11 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 
 - Read `specs/_plans/<plan-name>/notes/planning.md` first, if present. This is your own prior-pass hand-off note. It orients you before you re-read anything else.
 - Read the BLOCKER list from the path given in the prompt: `specs/_plans/<plan-name>/review/round-<N>.md`. The findings never arrive inline; the file is the only source.
-- Address only the BLOCKER findings. Execute each one's `Fix:` line: an imperative naming the artifact, section, and concrete change. Revise exactly what it points to. Do not rewrite unrelated content. Do not act on ADVISORY findings.
+- When the prompt's scope is `new interview answers`, apply only the answers the brief's `## Clarifying Interview Results` gained since your last pass. Change only what those answers decide, record each in `decision-log.md`'s Interview section, and re-run `speq plan validate <plan-name>`. The findings file is context, not a work list, in this scope.
+- Resolve every BLOCKER finding. Each `Fix:` line names the artifact, section, and concrete change; treat it as the reviewer's proposal, not a waiver of this skill's rules. Apply it together with the rest of this workflow, the Prose drift check included. When a `Fix:` line contradicts a rule here or in `/speq-plan`'s `references/delta-template.md`, follow the rule and say so in the `Resolved:` evidence. Leave content no finding touches as it is.
+- You MAY also fix an ADVISORY finding when it corrects a fact you can verify in the repository (a count, a path, a test name, a missing task a project rule requires) and the change stays local. Report each as `Fixed advisory: <title>: <evidence>`.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
-- Return one line per blocker you addressed: `Resolved: <title> — <evidence>` or `Could not resolve: <title> — <why>`. The orchestrator uses this to decide whether a further review round is needed — do not omit it, even when every finding resolved cleanly.
-- If resolving a blocker surfaces a genuinely irreducible new decision, escalate it exactly as during initial planning (interactive: signal back with a concrete question; headless: `OPEN QUESTIONS:` sentinel).
+- When a finding's `Fix:` leaves a choice open (a default, a boundary, which of two behaviors), decide it by the brief and the interview, record it as a `decision-log.md` entry, and return `Chose: <title>: <decision> (decision-log [<n>])`. The orchestrator shows these to the user. If the choice is a user-owned decision the brief does not settle, handle it per User-Owned Decisions instead: in interactive mode, escalate it and do not pick.
+- Return one line per blocker you addressed: `Resolved: <title>: <evidence>` or `Could not resolve: <title>: <why>`. The orchestrator uses these lines to decide the next step, so include them even when every finding resolved cleanly.
+- Before you return, collect every user-owned decision the plan still leaves open, wherever it came from: a BLOCKER's fix, an ADVISORY finding you did not apply, or your own pass. In interactive mode, return all of them as an `OPEN QUESTIONS:` block. Never leave one for the orchestrator to report as an advisory. In headless mode, follow Headless Mode.

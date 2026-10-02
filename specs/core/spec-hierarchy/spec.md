@@ -9,6 +9,8 @@ The system SHALL organize feature specifications in a shallow two-level hierarch
 * Maximum nesting depth is 2 levels (domain/feature)
 * The `_plans/` and `_recorded/` directories are reserved for plan management
 * Domain and feature names use kebab-case
+* The project root is the nearest directory, starting at the working directory and walking up, that contains `specs/`
+* Every `speq` command resolves `specs/` against the project root
 
 ## Scenarios
 
@@ -48,3 +50,17 @@ The system SHALL organize feature specifications in a shallow two-level hierarch
 * *GIVEN* a domain directory with no feature subdirectories
 * *WHEN* the system discovers features
 * *THEN* the system SHALL NOT include the empty domain in results
+
+### Scenario: Run from a subdirectory of the project
+
+* *GIVEN* a project whose root contains `specs/`
+* *WHEN* the user runs a `speq` command from a subdirectory of that project
+* *THEN* the system SHALL resolve `specs/` against the project root
+* *AND* the command SHALL behave as if run from the project root
+
+### Scenario: No specs directory in any parent
+
+* *GIVEN* a working directory with no `specs/` directory in it or any parent directory
+* *WHEN* the user runs a `speq` command
+* *THEN* the system SHALL report that no `specs/` directory was found and name the working directory
+* *AND* the system SHALL exit with code 1

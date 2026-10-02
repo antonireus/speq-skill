@@ -18,8 +18,8 @@ Required for new features and significant changes. Skip for small fixes.
 
 The problem, the forces at play, and why it needs a design decision.
 
-- **Goals** — <what this design achieves>
-- **Non-Goals** — <what this design explicitly does NOT address>
+- **Goals:** <what this design achieves>
+- **Non-Goals:** <what this design explicitly does NOT address>
 
 ### Decision
 
@@ -54,9 +54,9 @@ High-level system structure: components, layers, data flow
 | <feature-name> | NEW / CHANGED / REMOVED | `<path>/spec.md` |
 
 Status values:
-- **NEW** — Feature doesn't exist yet
-- **CHANGED** — Modifying existing feature behavior
-- **REMOVED** — Deprecating/deleting feature
+- **NEW:** Feature doesn't exist yet
+- **CHANGED:** Modifying existing feature behavior
+- **REMOVED:** Deprecating/deleting feature
 
 ## Impact
 
@@ -97,7 +97,7 @@ Optional: task groups for the implement orchestrator. Each group is a knowledge 
 | A: <cluster name> | 1.1-1.4, 3.1 | — | spec delta `<domain>/<feature>`; `src/<module>/`, `<test-file-path>` |
 | B: <cluster name> | 2.1-2.3 | A (shares `src/<module>/`) | spec delta `<domain>/<other-feature>`; `src/<module>/`, `<test-file-path>` |
 
-- **Knowledge** — the group's spec delta path(s) plus the source and test files they govern. The implement orchestrator passes this entry to the group's agent as its orientation pointer.
+- **Knowledge:** the group's spec delta path(s) plus the source and test files they govern. The implement orchestrator passes this entry to the group's agent as its orientation pointer.
 - Tasks that share a spec delta or a source module default into one group.
 - Overlapping Knowledge entries across groups are a consolidation signal, not a parallelism opportunity — merge the groups, or declare a dependency and run them in sequence.
 
@@ -126,8 +126,8 @@ Do NOT copy placeholders below. Replace with real values.
 |----------|-----------|---------------|-----------|
 | <scenario from spec> | Integration / Unit | `<test-file-path>` | `<test_function_name>` |
 
-- **Integration test** — default for all scenarios
-- **Unit test** — only for pure computation with no I/O or side effects
+- **Integration test:** default for all scenarios
+- **Unit test:** only for pure computation with no I/O or side effects
 - A feature is complete when ALL its scenarios have passing tests
 
 ### Manual Testing

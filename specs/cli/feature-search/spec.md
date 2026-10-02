@@ -36,7 +36,7 @@ The CLI SHALL provide semantic search for feature specifications using vector em
 * *THEN* the system SHALL find semantically similar scenarios
 * *AND* the system SHALL display results ranked by similarity score
 * *AND* the system SHALL show the scenario path (domain/feature/scenario)
-* *AND* the system SHALL show a snippet of the scenario content
+* *AND* the system SHALL show the scenario's first step as a snippet
 * *AND* the system SHALL exit with code 0
 
 ### Scenario: Search with limit

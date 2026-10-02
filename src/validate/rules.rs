@@ -78,8 +78,10 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
         });
     }
 
-    // Check RFC 2119 keywords in THEN steps (and AND steps following THEN)
+    // Check RFC 2119 keywords in THEN steps (and AND steps following THEN).
+    // Only those AND steps count toward the AND-step limit: preconditions are not assertions.
     let mut in_then_section = false;
+    let mut and_count = 0;
     for step in &scenario.steps {
         match step.kind {
             StepKind::Then => {
@@ -87,6 +89,7 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
                 check_rfc2119_in_step(&step.text, &scenario.name, result);
             }
             StepKind::And if in_then_section => {
+                and_count += 1;
                 check_rfc2119_in_step(&step.text, &scenario.name, result);
             }
             StepKind::Given | StepKind::When => {
@@ -96,12 +99,6 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
         }
     }
 
-    // Check for too many AND steps
-    let and_count = scenario
-        .steps
-        .iter()
-        .filter(|s| matches!(s.kind, StepKind::And))
-        .count();
     if and_count > 3 {
         result.add_warning(ValidationWarning::TooManyAndSteps {
             scenario: scenario.name.clone(),
@@ -111,10 +108,12 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
 }
 
 fn check_rfc2119_in_step(step_text: &str, scenario_name: &str, result: &mut ValidationResult) {
+    // Keywords inside inline code are literals, not requirements.
+    let prose = without_code_spans(step_text);
     // Check for uppercase RFC 2119 keyword first
-    if contains_rfc2119_keyword(step_text) {
+    if contains_rfc2119_keyword(&prose) {
         // Also check if there's a lowercase version alongside (we warn about it)
-        if let Some(keyword) = find_lowercase_rfc2119_keyword(step_text) {
+        if let Some(keyword) = find_lowercase_rfc2119_keyword(&prose) {
             result.add_warning(ValidationWarning::LowercaseRfcKeyword {
                 keyword,
                 step: step_text.to_string(),
@@ -124,7 +123,7 @@ fn check_rfc2119_in_step(step_text: &str, scenario_name: &str, result: &mut Vali
     }
 
     // No uppercase keyword found, check for lowercase version
-    if let Some(keyword) = find_lowercase_rfc2119_keyword(step_text) {
+    if let Some(keyword) = find_lowercase_rfc2119_keyword(&prose) {
         // Lowercase keyword found - this counts as having a keyword, but warn
         result.add_warning(ValidationWarning::LowercaseRfcKeyword {
             keyword,
@@ -147,6 +146,10 @@ fn is_word_boundary(text: &str, pos: usize) -> bool {
     let before = bytes[pos - 1].is_ascii_alphanumeric();
     let after = bytes[pos].is_ascii_alphanumeric();
     before != after
+}
+
+fn without_code_spans(text: &str) -> String {
+    text.split('`').step_by(2).collect::<Vec<_>>().join(" ")
 }
 
 fn contains_rfc2119_keyword(text: &str) -> bool {
@@ -201,11 +204,36 @@ mod tests {
     use super::*;
     use crate::validate::parser::Step;
 
+    #[test]
+    fn too_many_and_steps_warning_says_to_split() {
+        let warning = ValidationWarning::TooManyAndSteps {
+            scenario: "S".to_string(),
+            count: 4,
+        };
+        assert!(
+            warning
+                .to_string()
+                .contains("Split it into separate scenarios")
+        );
+    }
+
+    #[test]
+    fn ignores_keywords_inside_inline_code() {
+        let mut result = ValidationResult::new();
+        check_rfc2119_in_step("the system SHALL print `may fail`", "S", &mut result);
+        assert!(result.warnings.is_empty());
+
+        let mut result = ValidationResult::new();
+        check_rfc2119_in_step("the output is `SHALL`", "S", &mut result);
+        assert!(!result.errors.is_empty());
+    }
+
     fn valid_spec() -> FeatureSpec {
         FeatureSpec {
             feature_name: Some("Test".to_string()),
             description: Some("Description".to_string()),
             has_background: true,
+            background: Vec::new(),
             has_scenarios_section: true,
             scenarios: vec![Scenario {
                 name: "Test scenario".to_string(),
@@ -443,6 +471,27 @@ mod tests {
         }
         let result = validate(&spec);
         assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn and_steps_before_then_do_not_count_toward_limit() {
+        let mut spec = valid_spec();
+        for i in 0..4 {
+            spec.scenarios[0].steps.insert(
+                1,
+                Step {
+                    kind: StepKind::And,
+                    text: format!("precondition {i}"),
+                },
+            );
+        }
+        let result = validate(&spec);
+        assert!(
+            result
+                .warnings
+                .iter()
+                .all(|w| !matches!(w, ValidationWarning::TooManyAndSteps { .. }))
+        );
     }
 
     #[test]

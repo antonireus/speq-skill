@@ -26,6 +26,15 @@ impl std::fmt::Display for FeaturePath {
     }
 }
 
+/// The nearest directory, starting at `start` and walking up, that holds a
+/// `specs/` directory. `None` when no ancestor holds one.
+pub fn find_project_root(start: &Path) -> Option<std::path::PathBuf> {
+    start
+        .ancestors()
+        .find(|dir| dir.join("specs").is_dir())
+        .map(Path::to_path_buf)
+}
+
 pub fn discover_domains(base: &Path) -> Vec<String> {
     let Ok(entries) = fs::read_dir(base) else {
         return Vec::new();
@@ -153,6 +162,22 @@ mod tests {
         let tmp = TempDir::new().unwrap();
         let domains = discover_domains(tmp.path());
         assert!(domains.is_empty());
+    }
+
+    #[test]
+    fn finds_project_root_from_a_subdirectory() {
+        let tmp = TempDir::new().unwrap();
+        fs::create_dir_all(tmp.path().join("specs")).unwrap();
+        fs::create_dir_all(tmp.path().join("src/nested")).unwrap();
+
+        let root = find_project_root(&tmp.path().join("src/nested"));
+        assert_eq!(root.as_deref(), Some(tmp.path()));
+    }
+
+    #[test]
+    fn no_project_root_without_specs_dir() {
+        let tmp = TempDir::new().unwrap();
+        assert_eq!(find_project_root(tmp.path()), None);
     }
 
     #[test]

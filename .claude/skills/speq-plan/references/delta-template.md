@@ -7,6 +7,7 @@ Captures feature changes in plans before applying to permanent specs.
 1. **New Feature**: Full spec (Feature heading, Background, all Scenarios)
 2. **Existing Feature**: Wrap only what changed in markers. A `### Scenario:` heading, `## Background`, or the `# Feature: <name>` description — each wrapped in place, heading included inside the marker
 3. **Applying**: Merge deltas into permanent specs, remove markers
+4. **Scenario shape**: Delta scenarios follow `feature-template.md`'s Scenario Shape rules: one case per scenario, one condition or assertion per step
 
 ## Anchors
 
@@ -32,7 +33,7 @@ Put the heading itself inside the marker, not above it. A block whose first line
 
 ## Deletion Semantics
 
-A `DELTA:CHANGED` block on `## Background` or `# Feature: <name>` replaces the whole section. Any line the block omits is deleted from the permanent spec. Copy the current section, then edit it — never write only the lines that changed.
+A `DELTA:CHANGED` block on `## Background` or `# Feature: <name>` replaces the whole section. Any line the block omits is deleted from the permanent spec. Copy the current section (`speq feature get --raw <domain>/<feature>`), then edit it — never write only the lines that changed.
 
 ## Example: Scenarios
 

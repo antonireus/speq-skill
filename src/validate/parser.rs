@@ -13,6 +13,8 @@ pub struct FeatureSpec {
     pub feature_name: Option<String>,
     pub description: Option<String>,
     pub has_background: bool,
+    /// The Background section's paragraphs and list items, in order.
+    pub background: Vec<String>,
     pub has_scenarios_section: bool,
     pub scenarios: Vec<Scenario>,
 }
@@ -50,14 +52,25 @@ enum ParseState {
     InEmphasis,
 }
 
+/// The `##` section the parser is in, which decides where prose text belongs.
+#[derive(Debug, Default, Clone, Copy, PartialEq)]
+enum Section {
+    #[default]
+    Preamble,
+    Background,
+    Other,
+}
+
 #[derive(Default)]
 struct ParseContext {
     state: ParseState,
+    section: Section,
     current_scenario: Option<Scenario>,
     current_step_kind: Option<StepKind>,
     current_step_text: String,
     heading_text: String,
     description_buffer: String,
+    background_buffer: String,
     in_list_item: bool,
     warnings: Vec<ValidationWarning>,
 }
@@ -75,6 +88,12 @@ pub fn parse(content: &str) -> Result<ParseResult, ValidationError> {
             Event::Text(text) => {
                 handle_text(&mut ctx, &text);
             }
+            Event::Code(code) => {
+                handle_text(&mut ctx, &format!("`{code}`"));
+            }
+            Event::SoftBreak => {
+                handle_text(&mut ctx, " ");
+            }
             Event::End(TagEnd::Heading(_)) => {
                 handle_heading_end(&mut spec, &mut ctx);
             }
@@ -82,7 +101,7 @@ pub fn parse(content: &str) -> Result<ParseResult, ValidationError> {
                 handle_item_start(&mut ctx);
             }
             Event::End(TagEnd::Item) => {
-                handle_item_end(&mut ctx);
+                handle_item_end(&mut spec, &mut ctx);
             }
             Event::Start(Tag::Emphasis) => {
                 if matches!(ctx.state, ParseState::InListItem) {
@@ -130,9 +149,11 @@ fn handle_text(ctx: &mut ParseContext, text: &str) {
         ParseState::InFeatureHeading | ParseState::InH2Heading | ParseState::InScenarioHeading => {
             ctx.heading_text.push_str(text);
         }
-        ParseState::AfterFeatureHeading if !ctx.in_list_item => {
-            ctx.description_buffer.push_str(text);
-        }
+        ParseState::AfterFeatureHeading => match ctx.section {
+            Section::Preamble if !ctx.in_list_item => ctx.description_buffer.push_str(text),
+            Section::Background => ctx.background_buffer.push_str(text),
+            _ => {}
+        },
         ParseState::InEmphasis => {
             handle_emphasis_text(ctx, text);
         }
@@ -192,14 +213,21 @@ fn handle_heading_end(spec: &mut FeatureSpec, ctx: &mut ParseContext) {
             ctx.state = ParseState::AfterFeatureHeading;
         }
         ParseState::InH2Heading => {
-            match trimmed {
-                "Background" => spec.has_background = true,
-                "Scenarios" => spec.has_scenarios_section = true,
-                _ => {}
-            }
+            ctx.section = match trimmed {
+                "Background" => {
+                    spec.has_background = true;
+                    Section::Background
+                }
+                "Scenarios" => {
+                    spec.has_scenarios_section = true;
+                    Section::Other
+                }
+                _ => Section::Other,
+            };
             ctx.state = ParseState::AfterFeatureHeading;
         }
         ParseState::InScenarioHeading => {
+            ctx.section = Section::Other;
             let name = trimmed
                 .strip_prefix("Scenario:")
                 .map(|s| s.trim())
@@ -223,8 +251,9 @@ fn handle_item_start(ctx: &mut ParseContext) {
     }
 }
 
-fn handle_item_end(ctx: &mut ParseContext) {
+fn handle_item_end(spec: &mut FeatureSpec, ctx: &mut ParseContext) {
     ctx.in_list_item = false;
+    flush_background(spec, ctx);
     if let (Some(kind), Some(scenario)) =
         (ctx.current_step_kind.take(), ctx.current_scenario.as_mut())
     {
@@ -240,10 +269,29 @@ fn handle_item_end(ctx: &mut ParseContext) {
 }
 
 fn handle_paragraph_end(spec: &mut FeatureSpec, ctx: &mut ParseContext) {
-    if matches!(ctx.state, ParseState::AfterFeatureHeading) && !ctx.description_buffer.is_empty() {
-        spec.description = Some(ctx.description_buffer.trim().to_string());
-        ctx.description_buffer.clear();
+    if !matches!(ctx.state, ParseState::AfterFeatureHeading) {
+        return;
     }
+    match ctx.section {
+        Section::Preamble if !ctx.description_buffer.trim().is_empty() => {
+            let paragraph = ctx.description_buffer.trim();
+            spec.description = Some(match spec.description.take() {
+                Some(previous) => format!("{previous}\n\n{paragraph}"),
+                None => paragraph.to_string(),
+            });
+            ctx.description_buffer.clear();
+        }
+        Section::Background if !ctx.in_list_item => flush_background(spec, ctx),
+        _ => {}
+    }
+}
+
+fn flush_background(spec: &mut FeatureSpec, ctx: &mut ParseContext) {
+    let text = ctx.background_buffer.trim();
+    if !text.is_empty() {
+        spec.background.push(text.to_string());
+    }
+    ctx.background_buffer.clear();
 }
 
 #[cfg(test)]
@@ -398,6 +446,53 @@ Desc
         assert_eq!(result.spec.scenarios.len(), 2);
         assert_eq!(result.spec.scenarios[0].name, "First");
         assert_eq!(result.spec.scenarios[1].name, "Second");
+    }
+
+    #[test]
+    fn keeps_inline_code_in_steps_and_headings() {
+        let md = r#"# Feature: Test
+
+Desc
+
+## Background
+
+* Syntax: `speq record <plan>`
+
+## Scenarios
+
+### Scenario: Parse `host:port`
+
+* *GIVEN* a URL in the format `exasol://host:port`
+"#;
+        let result = parse(md).unwrap();
+        let scenario = &result.spec.scenarios[0];
+        assert_eq!(scenario.name, "Parse `host:port`");
+        assert_eq!(
+            scenario.steps[0].text,
+            "a URL in the format `exasol://host:port`"
+        );
+        assert_eq!(result.spec.background, vec!["Syntax: `speq record <plan>`"]);
+    }
+
+    #[test]
+    fn description_excludes_background_paragraphs() {
+        let md = "# Feature: Test\n\nFirst.\n\nSecond.\n\n## Background\n\nBackground prose.\n\n* An item\n";
+        let result = parse(md).unwrap();
+        assert_eq!(
+            result.spec.description,
+            Some("First.\n\nSecond.".to_string())
+        );
+        assert_eq!(result.spec.background, vec!["Background prose.", "An item"]);
+    }
+
+    #[test]
+    fn joins_soft_wrapped_lines_with_a_space() {
+        let md = "# Feature: Test\n\nLine one\nline two.\n";
+        let result = parse(md).unwrap();
+        assert_eq!(
+            result.spec.description,
+            Some("Line one line two.".to_string())
+        );
     }
 
     #[test]

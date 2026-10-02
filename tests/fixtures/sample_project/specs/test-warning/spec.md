@@ -11,9 +11,9 @@ The system is ready.
 ### Scenario: Too many AND steps
 
 * *GIVEN* state one
-* *AND* state two
-* *AND* state three
-* *AND* state four
-* *AND* state five
 * *WHEN* an action occurs
 * *THEN* the system SHALL respond
+* *AND* the system SHALL log it
+* *AND* the system SHALL count it
+* *AND* the system SHALL report it
+* *AND* the system SHALL archive it
