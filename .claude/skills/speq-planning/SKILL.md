@@ -167,25 +167,16 @@ This is prevention, not the review gate. `plan-reviewer` still runs next, full-s
 
 ## User-Owned Decisions
 
-A user-owned decision is a choice where the user could reasonably pick a different option, and that does at least one of these:
+Read `/speq-plan`'s `references/user-owned-decisions.md` before you author anything. It defines which decisions the user owns and what settles one. A decision the brief settles carries a verbatim quote from its source. An `## Orchestrator Assumptions` entry without such a quote settles nothing. A user-visible consequence of a specified approach that the source does not state is not settled either, even when the approach is.
 
-- **Behavior:** changes what the feature does for a user: the input it accepts (partial, empty, invalid, or conflicting input included), its results, or which error appears, and when and where the caller sees it.
-- **Compatibility:** changes behavior that existing callers rely on.
-- **Interface:** adds to, removes from, or changes the public interface.
-- **Design fork:** is irreversible, or picks between genuinely incompatible designs.
-- **Sensitive data:** has a security or compliance consequence, such as where credentials or personal data are kept, for how long, or whether they are logged.
-- **Scope and delivery:** sets what this plan covers and what it leaves to a follow-up, including nearby code with the same defect, or makes a release choice the target repository's rules leave to the author.
-
-The brief settles a user-owned decision when one of these decides it: the request, the linked issue, an answer in `## Clarifying Interview Results`, or a target-repository rule that leaves only one option. A rule that offers alternatives (a version bump or an `[Unreleased]` CHANGELOG entry, for example) settles nothing. An `## Orchestrator Assumptions` entry settles a decision only through the source it names.
-
-Every other choice is yours: naming, file placement, internal structure, test layout, a clear project convention. Make it, and record the significant ones under Design Decisions.
+Every other choice is yours. Make it, and record the significant ones under Design Decisions.
 
 What happens to a user-owned decision the brief does not settle depends on the mode:
 
 - **Interactive** (the orchestrator's prompt has no `Interview Mode` field): the user decides it, not you. Finish the code exploration first, so you return every such decision at once. Then write `notes/planning.md` (step 8) and return the escalation below before you author any artifact that depends on these decisions. The orchestrator asks the user, appends the answers to the brief, and respawns you with the same brief.
 - **Headless** (`Interview Mode: headless`): follow Headless Mode below.
 
-**Escalation format (both modes).** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list, one bullet per decision: the question, why the brief does not settle it (with a file and line when the code shows it), two to four options, and the option you recommend. Do not mix this sentinel into a normal completion report.
+**Escalation format (both modes).** Return the response prefixed with the exact sentinel `OPEN QUESTIONS:` followed by a markdown bullet list, one bullet per decision: the question, why the brief does not settle it (with a file and line when the code shows it), two to four options, and the option you recommend. Do not mix this sentinel into a normal completion report. The one exception is Revision Mode, where the `Resolved:` and `Could not resolve:` lines follow the question list.
 
 ## Headless / Non-Interactive Mode
 
@@ -201,10 +192,11 @@ If the orchestrator respawns `planner-agent` with the path to a `plan-reviewer` 
 
 - Read `specs/_plans/<plan-name>/notes/planning.md` first, if present. This is your own prior-pass hand-off note. It orients you before you re-read anything else.
 - Read the BLOCKER list from the path given in the prompt: `specs/_plans/<plan-name>/review/round-<N>.md`. The findings never arrive inline; the file is the only source.
+- When the prompt's scope is `new interview answers`, apply only the answers the brief's `## Clarifying Interview Results` gained since your last pass. Change only what those answers decide, record each in `decision-log.md`'s Interview section, and re-run `speq plan validate <plan-name>`. The findings file is context, not a work list, in this scope.
 - Resolve every BLOCKER finding. Each `Fix:` line names the artifact, section, and concrete change; treat it as the reviewer's proposal, not a waiver of this skill's rules. Apply it together with the rest of this workflow, the Prose drift check included. When a `Fix:` line contradicts a rule here or in `/speq-plan`'s `references/delta-template.md`, follow the rule and say so in the `Resolved:` evidence. Leave content no finding touches as it is.
 - You MAY also fix an ADVISORY finding when it corrects a fact you can verify in the repository (a count, a path, a test name, a missing task a project rule requires) and the change stays local. Report each as `Fixed advisory: <title>: <evidence>`.
 - For each blocker resolved, add a `## Review Findings` entry to `decision-log.md` titled `[plan-review] <short finding title>`, with **Finding** (what `plan-reviewer` flagged), **Direction change** (what changed), and **Promotes to ADR** (per the rule above).
 - Re-run `speq plan validate <plan-name>` before returning.
 - When a finding's `Fix:` leaves a choice open (a default, a boundary, which of two behaviors), decide it by the brief and the interview, record it as a `decision-log.md` entry, and return `Chose: <title>: <decision> (decision-log [<n>])`. The orchestrator shows these to the user. If the choice is a user-owned decision the brief does not settle, handle it per User-Owned Decisions instead: in interactive mode, escalate it and do not pick.
 - Return one line per blocker you addressed: `Resolved: <title>: <evidence>` or `Could not resolve: <title>: <why>`. The orchestrator uses these lines to decide the next step, so include them even when every finding resolved cleanly.
-- If resolving a blocker surfaces a new user-owned decision the brief does not settle, handle it exactly as during initial planning, per User-Owned Decisions.
+- Before you return, collect every user-owned decision the plan still leaves open, wherever it came from: a BLOCKER's fix, an ADVISORY finding you did not apply, or your own pass. In interactive mode, return all of them as an `OPEN QUESTIONS:` block. Never leave one for the orchestrator to report as an advisory. In headless mode, follow Headless Mode.

@@ -28,7 +28,7 @@ From the orchestrator, a short prompt with these paths and fields:
 - `plan.md`, `decision-log.md`, and every `specs/_plans/<plan-name>/**/spec.md` delta
 - Round number (`1` or `2`) — on round 2, the path to `specs/_plans/<plan-name>/review/round-1.md`. Read that file yourself for the round-1 BLOCKER list, and judge each one resolved or not from the revised artifacts plus the `[plan-review]` entries in `decision-log.md` — no diff arrives inline.
 - On round 2 only, a `Round 2 Scope: confirm-only | full` field. `confirm-only` shortens round 2 to the blocker recheck alone, per `/speq-plan-review`'s Round 2 rule. Treat an absent field as `full`.
-- The brief's `## Orchestrator Assumptions` section: choices the orchestrator made without asking the user. Challenge these like any plan content, including whether the source each entry names really settles it.
+- The brief's `## Orchestrator Assumptions` section: choices the orchestrator made without asking the user. Challenge these like any plan content. Each decision entry needs a verbatim quote that states the choice, per `/speq-plan`'s `references/user-owned-decisions.md`; check the quote against its source.
 
 **Read `notes/planning.md` before you open any source file.** It lists the files checked and the searches run (`planner-agent`'s hand-off note). Use it to skip rediscovery and spend your effort verifying the planner's claims and probing what it did not check. It is not authoritative and exempts no artifact from challenge.
 

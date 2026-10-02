@@ -40,14 +40,14 @@ Read the code the change touches: each file, function, or type the request or li
 
 ### 2. Clarifying Interview (orchestrator)
 
-The user owns every user-owned decision, as `/speq-planning`'s `## User-Owned Decisions` section defines it. Read that section first. The interview settles these decisions before planning starts, via `AskUserQuestion`. Never assume.
+Read `<this skill's base directory>/references/user-owned-decisions.md` in full now. It defines the decisions the user owns and what settles one. The interview settles these decisions before planning starts, via `AskUserQuestion`. Never assume.
 
 Run the interview in every permission mode, auto mode included: the interview is how this skill gets the user's decisions, not an interruption to avoid. A request that links an issue or proposes a fix still needs it, for the choices the issue leaves open and the scope edges. `/speq-plan-pr` is the path for planning without a live user.
 
-1. **List the decisions.** Write down the decisions the plan has to make. Check every area in the User-Owned Decisions list against the code Discovery read, even when the request or linked issue specifies the approach. A specified approach usually leaves some of them open: what partial input does, when an error now appears, whether a new function is public.
-2. **Mark what settles each one:** the request, the linked issue, a target-repository rule that leaves only one option, or nothing. A rule that offers alternatives settles nothing.
-3. **Ask about every decision nothing settles.** Give MECE options, with your recommendation first. When the code shows why the choice matters, cite it as a counterexample (`file:line`). Do not ask the user to confirm the request itself, an approach the request or linked issue specifies, or an obligation the target repository's rules impose (a required CHANGELOG entry, for example).
-4. **Record the rest.** Keep the user's answers verbatim for the brief. Write each decision you did not ask about to `## Orchestrator Assumptions` with the source that settles it, so `plan-reviewer` can challenge a wrong skip. Details too small to ask about (naming, file placement, an obvious convention) go there too.
+1. **List the decisions.** Write down the decisions the plan has to make. Check every area in the definition against the code Discovery read, even when the request or linked issue specifies the approach. Add each user-visible consequence of the specified approach that the source does not state, for example an error that now appears earlier or carries a different status.
+2. **Find a quote for each one.** A decision is settled only by a verbatim quote that states the choice, from a source the definition accepts. No quote, or a quote from a rule that offers alternatives, means the decision is open.
+3. **Ask about every open decision.** Give MECE options, with your recommendation first. When the code shows why the choice matters, cite it as a counterexample (`file:line`). Ask about an unstated consequence as a consequence: "The issue's approach moves X to Y. Accept?" Do not ask the user to confirm the request itself, an approach the request or linked issue specifies, or an obligation the target repository's rules impose (a required CHANGELOG entry, for example).
+4. **Record the rest.** Keep the user's answers verbatim for the brief. Write each settled decision to `## Orchestrator Assumptions` in the definition's recording form, with its quote, so `plan-reviewer` can check it. Details too small to ask about (naming, file placement, an obvious convention) go there too, marked `detail`.
 
 ### 3. Plan Name (orchestrator)
 
@@ -80,7 +80,7 @@ Write the brief once, to `specs/_plans/<plan-name>/notes/brief.md` (create `note
 <verbatim Q&A from the AskUserQuestion exchanges: only questions the user actually answered>
 
 ## Orchestrator Assumptions
-<each decision you did not ask about, with the source that settles it (`settled by: request | issue | <rule>`), and small details you settled yourself; one line each, or "none". These are open to challenge, unlike the interview answers>
+<each decision you did not ask about, as `<decision>: <choice> (settled by: <source>: "<verbatim quote>")`, and small details you settled yourself, marked `detail`; one line each, or "none". These are open to challenge, unlike the interview answers>
 
 ## Templates
 <this skill's base directory>/references/ (plan-template.md, delta-template.md, feature-template.md, decision-log-plan-template.md)
@@ -114,7 +114,7 @@ After the spawn, say one line that the planner is running and end the turn. When
 
 When the sub-agent returns:
 
-1. If the return starts with `OPEN QUESTIONS:`, ask each question via `AskUserQuestion`, with the planner's options and its recommended option first. Append each question and answer to the brief's `## Clarifying Interview Results`, then respawn `planner-agent` with the same short prompt and brief path. Do this before the review in step 6, and again whenever a revision pass returns `OPEN QUESTIONS:`.
+1. If the return starts with `OPEN QUESTIONS:`, ask each question via `AskUserQuestion`, with the planner's options and its recommended option first. Append each question and answer to the brief's `## Clarifying Interview Results`. Then respawn `planner-agent`: after a first pass, with the same short prompt and brief path; after a revision pass, with the revision message and `Scope: new interview answers`. Do this before the review in step 6, and again whenever a revision pass returns `OPEN QUESTIONS:`.
 2. Read the sub-agent's `Validation:` line. Run `speq plan validate <plan-name>` yourself only when that line is missing or is not `pass`.
 3. List all created files.
 
@@ -154,7 +154,7 @@ It writes its findings to `specs/_plans/<plan-name>/review/round-1.md` and retur
 ```
 Revision Mode — <plan-name>
 Findings file: specs/_plans/<plan-name>/review/round-<N>.md
-Scope: <BLOCKERs | still-open MECHANICAL findings>
+Scope: <BLOCKERs | still-open MECHANICAL findings | new interview answers>
 ```
 
 Do not restate or paraphrase findings, add instructions, or settle an open choice in the message. The file is the only source, and `/speq-planning`'s Revision Mode says what to do with it. A finding that leaves a choice open is the planner's to decide and report as a `Chose:` line, or to escalate. It is never yours to pre-decide.
@@ -167,6 +167,8 @@ Do not restate or paraphrase findings, add instructions, or settle an open choic
 **ADVISORY findings** never loop and are never persisted. Read them from the last round file that ran a full pass and carry them into step 7's report: round 1's if round 2 ran confirm-only, round 2's otherwise. Drop any advisory the planner's return lists as `Fixed advisory:`.
 
 ### 7. Explain next steps (orchestrator)
+
+Before you call the plan ready, check the last planner return and the last round file for a user-owned decision that is still open, such as an ADVISORY finding whose fix picks a behavior. Ask about each one via `AskUserQuestion`, append the answers to the brief, and respawn `planner-agent` with the revision message, the last round file, and `Scope: new interview answers`. Never list an open user-owned decision as an advisory in the report below.
 
 Print the plan's summary per `/speq-plan-pr`'s `references/pr-body-template.md` — Current State / What Changes / Impact, composed from `plan.md`/`decision-log.md` the same way `speq-plan-pr` composes the PR body from them. This is terminal output, not a PR: print the `<details>` block's file list as a plain line, not the HTML fold, and the Test plan checklist as-is. `speq-plan-pr` and `speq-implement-pr` are the only skills that ever post this content as a PR; this step never touches git or GitHub.
 

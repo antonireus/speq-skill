@@ -72,12 +72,14 @@ Prose findings default to **ADVISORY**: style, not correctness. Escalate a `[PRO
 - **BLOCKER**: violates user intent, or the plan is infeasible/untestable as written, or breaks a project rule: one the skill system enforces (the promotion gate, `[IMPLEMENTATION_LEAKAGE]`, the Prose drift check) or one the target repository's `CLAUDE.md`/`AGENTS.md` states (for example, a required CHANGELOG entry). Gates the plan; the orchestrator loops it back to `planner-agent`.
 - **ADVISORY**: a real risk, tolerable if the human acknowledges it. Never blocks; surfaced in the orchestrator's final report only.
 
+In an interactive brief (no `## Interview Mode` section), a finding whose fix needs a user-owned decision the brief does not settle is always a BLOCKER tagged `Escalation: HUMAN`, however small it looks. That includes an `## Orchestrator Assumptions` entry with no verbatim quote that states the choice, and a user-visible consequence of a specified approach that its source does not state. `/speq-plan`'s `references/user-owned-decisions.md` defines both. Never rate such a finding ADVISORY: an advisory never reaches the user as a question.
+
 ## Escalation Class (BLOCKER only)
 
 Tag every BLOCKER `Escalation: HUMAN` or `Escalation: MECHANICAL`. This decides two things downstream, both in the orchestrator: how much round 2 checks (an all-`MECHANICAL` round 1 gets a confirm-only round 2 after the fix pass; a `HUMAN` finding gets a full round 2), and what happens if a finding is still open once review is done: `HUMAN` findings reach the user (via `AskUserQuestion` or an `OPEN QUESTIONS:` PR comment); `MECHANICAL` ones get one direct fix from `planner-agent`, no further review round, no human interruption unless that fix itself fails.
 
 `HUMAN`: the fix needs a judgment only the requester can make. The bar depends on the brief's mode, using the same rules `/speq-planning` gives the planner:
-- **Interactive brief** (no `## Interview Mode` section): the fix needs a user-owned decision, per `/speq-planning`'s User-Owned Decisions section, that the brief does not settle.
+- **Interactive brief** (no `## Interview Mode` section): the fix needs a user-owned decision, per `/speq-plan`'s `references/user-owned-decisions.md`, that the brief does not settle.
 - **Headless brief** (`## Interview Mode` is `headless`): the fix needs a decision `/speq-planning`'s Headless Mode would escalate: irreversible, a change to what the feature does for a user, genuinely incompatible architectural designs with no clear winner, or a security or compliance consequence.
 - **Both modes:** a load-bearing fact that neither the plan's own artifacts nor the codebase can settle, and whose falsity would change what the feature does for a user (e.g., "this closes the leak" resting on a claim nothing in this repo verifies).
 
