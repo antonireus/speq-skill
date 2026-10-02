@@ -8,6 +8,7 @@ The validator SHALL ensure that each scenario follows the GIVEN-WHEN-THEN struct
 * Scenarios MUST contain at least one WHEN step
 * Scenarios MUST contain at least one THEN step
 * AND steps extend the previous GIVEN, WHEN, or THEN step
+* Only AND steps that follow a THEN step count toward the AND-step limit
 * Steps are formatted as `* *KEYWORD* <text>`
 
 ## Scenarios
@@ -44,14 +45,20 @@ The validator SHALL ensure that each scenario follows the GIVEN-WHEN-THEN struct
 
 ### Scenario: Warning for excessive AND steps
 
-* *GIVEN* a scenario with more than 3 AND steps total
+* *GIVEN* a scenario with more than 3 AND steps after its THEN step
 * *WHEN* the validator checks the scenario structure
-* *THEN* the system SHOULD report a warning indicating the scenario has too many AND steps
-* *AND* the warning SHALL advise splitting the scenario instead of merging steps
+* *THEN* the system SHOULD report a warning indicating the scenario has too many AND steps after THEN
+* *AND* the warning SHALL advise splitting the scenario instead of merging or dropping steps
 * *AND* the system SHALL NOT report this as an error
 
 ### Scenario: No warning for acceptable AND count
 
-* *GIVEN* a scenario with exactly 3 AND steps
+* *GIVEN* a scenario with exactly 3 AND steps after its THEN step
+* *WHEN* the validator checks the scenario structure
+* *THEN* the system SHALL NOT report a warning about AND steps
+
+### Scenario: AND steps before THEN do not count toward the limit
+
+* *GIVEN* a scenario with 4 AND steps after its GIVEN step and none after its THEN step
 * *WHEN* the validator checks the scenario structure
 * *THEN* the system SHALL NOT report a warning about AND steps

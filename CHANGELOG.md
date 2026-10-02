@@ -8,6 +8,7 @@
 - Every `speq` command finds `specs/` in the nearest parent directory, so it works from any subdirectory of the project. With no `specs/` in any parent, it exits 1 and names the working directory, instead of printing `No features found.` with exit 0
 - The too-many-AND-steps warning now advises splitting the scenario instead of merging steps. `speq search query` shows each result's first step as its snippet instead of repeating the scenario name. RFC 2119 keyword checks ignore text inside inline code
 - `/speq:plan` and `/speq:plan-pr` always run round 2 of plan review after a fix pass; a round 1 with `HUMAN: 0` gets a confirm-only round 2 (`Round 2 Scope: confirm-only`, replacing the `Plan Size` field). `planner-agent` treats a `Fix:` line as a proposal that `/speq:planning`'s rules (the Prose drift check included) override, and may fix ADVISORY findings that correct a verifiable fact. The clarifying interview runs in every permission mode, auto mode included. Briefs carry `## Orchestrator Assumptions` (small details only) apart from the user's interview answers, and a `## Templates` pointer. Templates no longer use em dashes
+- The too-many-AND-steps warning counts only the AND steps after THEN, so preconditions no longer push a scenario over the limit. The warning also says not to drop a step
 
 ## 0.22.0
 

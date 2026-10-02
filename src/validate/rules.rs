@@ -78,8 +78,10 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
         });
     }
 
-    // Check RFC 2119 keywords in THEN steps (and AND steps following THEN)
+    // Check RFC 2119 keywords in THEN steps (and AND steps following THEN).
+    // Only those AND steps count toward the AND-step limit: preconditions are not assertions.
     let mut in_then_section = false;
+    let mut and_count = 0;
     for step in &scenario.steps {
         match step.kind {
             StepKind::Then => {
@@ -87,6 +89,7 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
                 check_rfc2119_in_step(&step.text, &scenario.name, result);
             }
             StepKind::And if in_then_section => {
+                and_count += 1;
                 check_rfc2119_in_step(&step.text, &scenario.name, result);
             }
             StepKind::Given | StepKind::When => {
@@ -96,12 +99,6 @@ fn validate_scenario(scenario: &Scenario, result: &mut ValidationResult) {
         }
     }
 
-    // Check for too many AND steps
-    let and_count = scenario
-        .steps
-        .iter()
-        .filter(|s| matches!(s.kind, StepKind::And))
-        .count();
     if and_count > 3 {
         result.add_warning(ValidationWarning::TooManyAndSteps {
             scenario: scenario.name.clone(),
@@ -474,6 +471,27 @@ mod tests {
         }
         let result = validate(&spec);
         assert!(result.warnings.is_empty());
+    }
+
+    #[test]
+    fn and_steps_before_then_do_not_count_toward_limit() {
+        let mut spec = valid_spec();
+        for i in 0..4 {
+            spec.scenarios[0].steps.insert(
+                1,
+                Step {
+                    kind: StepKind::And,
+                    text: format!("precondition {i}"),
+                },
+            );
+        }
+        let result = validate(&spec);
+        assert!(
+            result
+                .warnings
+                .iter()
+                .all(|w| !matches!(w, ValidationWarning::TooManyAndSteps { .. }))
+        );
     }
 
     #[test]

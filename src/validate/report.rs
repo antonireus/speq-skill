@@ -76,8 +76,9 @@ impl std::fmt::Display for ValidationWarning {
             ValidationWarning::TooManyAndSteps { scenario, count } => {
                 write!(
                     f,
-                    "Scenario '{scenario}' has {count} AND steps (recommended: 3 or fewer). \
-                     Split it into separate scenarios; do not merge steps into one compound step"
+                    "Scenario '{scenario}' has {count} AND steps after THEN (recommended: 3 or fewer). \
+                     Split it into separate scenarios; do not merge steps into one compound step \
+                     or drop a step"
                 )
             }
             ValidationWarning::LowercaseStepKeyword { keyword } => {
